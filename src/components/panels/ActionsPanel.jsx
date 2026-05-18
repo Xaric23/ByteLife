@@ -1,10 +1,10 @@
 import { useGame } from '../../context/GameContext';
-import { occultTypes } from '../../data/occults';
+import { occultTypes, generateSCPDesignation } from '../../data/occults';
 import { Button } from '../ui';
 import styles from './Panel.module.css';
 
 export default function ActionsPanel() {
-  const { player, updatePlayer, addLog, showModal, saveGame } = useGame();
+  const { player, applyAction, addLog, showModal, saveGame } = useGame();
 
   if (!player) return null;
 
@@ -12,105 +12,109 @@ export default function ActionsPanel() {
   const isOccult = player.occult !== "Human";
 
   const doActivity = (activity) => {
-    const updates = {};
+    let updates = {};
     let message = '';
 
     switch (activity) {
       case 'gym':
-        updates.health = Math.min(100, player.health + 8);
-        updates.happiness = Math.min(100, player.happiness + 3);
+        updates = { health: player.health + 8, happiness: player.happiness + 3 };
         message = 'Had a great workout at the gym!';
         break;
       case 'meditate':
-        updates.happiness = Math.min(100, player.happiness + 10);
-        updates.health = Math.min(100, player.health + 3);
+        updates = { happiness: player.happiness + 10, health: player.health + 3 };
         message = 'Found inner peace through meditation.';
         break;
       case 'socialize':
-        updates.social = Math.min(100, player.social + 10);
-        updates.happiness = Math.min(100, player.happiness + 5);
+        updates = { social: player.social + 10, happiness: player.happiness + 5 };
         message = 'Had a great time with friends!';
         break;
       case 'party':
-        updates.social = Math.min(100, player.social + 15);
-        updates.happiness = Math.min(100, player.happiness + 10);
-        updates.health = Math.max(0, player.health - 5);
+        updates = { social: player.social + 15, happiness: player.happiness + 10, health: player.health - 5 };
         message = 'Partied hard last night!';
         break;
       case 'volunteer':
-        updates.social = Math.min(100, player.social + 8);
-        updates.happiness = Math.min(100, player.happiness + 12);
-        updates.karma = Math.min(100, (player.karma || 50) + 5);
+        updates = { social: player.social + 8, happiness: player.happiness + 12, karma: (player.karma || 50) + 5 };
         message = 'Volunteered to help the community.';
         break;
       case 'therapy':
-        if (player.money < 2000) return;
-        updates.money = player.money - 2000;
-        updates.happiness = Math.min(100, player.happiness + 20);
+        if (player.money < 2000) {
+          addLog("Can't afford therapy right now.", 'System');
+          return;
+        }
+        updates = { money: player.money - 2000, happiness: player.happiness + 20 };
         message = 'Had a productive therapy session.';
         break;
       case 'doctor':
-        if (player.money < 5000) return;
-        updates.money = player.money - 5000;
-        updates.health = Math.min(100, player.health + 25);
+        if (player.money < 5000) {
+          addLog("Can't afford a doctor visit right now.", 'System');
+          return;
+        }
+        updates = { money: player.money - 5000, health: player.health + 25 };
         message = 'Got a health checkup and treatment.';
         break;
       case 'plastic_surgery':
-        if (player.money < 25000) return;
-        updates.money = player.money - 25000;
-        updates.social = Math.min(100, player.social + 15);
-        updates.happiness = Math.min(100, player.happiness + 10);
+        if (player.money < 25000) {
+          addLog("Can't afford plastic surgery.", 'System');
+          return;
+        }
+        updates = { money: player.money - 25000, social: player.social + 15, happiness: player.happiness + 10 };
         message = 'Got plastic surgery!';
         break;
+      default:
+        return;
     }
 
-    updatePlayer(updates);
-    addLog(message, 'Activity');
-    saveGame();
+    applyAction(updates, message, 'Activity');
   };
 
   const doOccultAction = (ability) => {
+    if (ability.cost && player.money < ability.cost) {
+      addLog(`Can't afford ${ability.name}.`, 'System');
+      return;
+    }
+    
     const updates = {};
     
-    if (ability.cost && player.money < ability.cost) return;
-    if (ability.cost) updates.money = player.money - ability.cost;
+    if (ability.cost) {
+      updates.money = player.money - ability.cost;
+    }
     
     if (ability.meterRestore) {
-      updates.occultMeter = Math.min(100, player.occultMeter + ability.meterRestore);
+      updates.occultMeter = player.occultMeter + ability.meterRestore;
     }
     if (ability.meterChange) {
-      updates.occultMeter = Math.max(0, Math.min(100, player.occultMeter + ability.meterChange));
+      updates.occultMeter = player.occultMeter + ability.meterChange;
     }
     if (ability.healthRestore) {
-      updates.health = Math.min(100, player.health + ability.healthRestore);
+      updates.health = player.health + ability.healthRestore;
     }
     if (ability.socialBonus) {
-      updates.social = Math.min(100, player.social + ability.socialBonus);
+      updates.social = player.social + ability.socialBonus;
     }
     if (ability.happinessBonus) {
-      updates.happiness = Math.min(100, player.happiness + ability.happinessBonus);
+      updates.happiness = player.happiness + ability.happinessBonus;
     }
     if (ability.smartsBonus) {
-      updates.smarts = Math.min(100, player.smarts + ability.smartsBonus);
+      updates.smarts = player.smarts + ability.smartsBonus;
     }
     if (ability.moneyGain) {
-      updates.money = (updates.money || player.money) + ability.moneyGain;
+      updates.money = (updates.money ?? player.money) + ability.moneyGain;
     }
 
+    let message = `${ability.name} successful.`;
+    
     if (ability.risk && Math.random() < ability.risk) {
-      addLog(`${ability.name} went wrong! Attracted unwanted attention.`, 'Occult');
+      message = `${ability.name} went wrong! Attracted unwanted attention.`;
+      
       if (ability.scpRisk && Math.random() < ability.scpRisk) {
         updates.scpContained = true;
-        updates.scpDesignation = `SCP-${Math.floor(Math.random() * 4999) + 1000}`;
+        updates.scpDesignation = generateSCPDesignation(player.occult);
         updates.job = null;
-        addLog(`Captured by SCP Foundation! Designated ${updates.scpDesignation}`, 'SCP');
+        message = `Captured by SCP Foundation! Designated ${updates.scpDesignation}`;
       }
-    } else {
-      addLog(`${ability.name} successful.`, 'Occult');
     }
 
-    updatePlayer(updates);
-    saveGame();
+    applyAction(updates, message, 'Occult');
   };
 
   const attemptCure = () => {
@@ -125,16 +129,20 @@ export default function ActionsPanel() {
               addLog("Can't afford the experimental cure.", 'Medical');
               return;
             }
-            updatePlayer({ money: player.money - 75000 });
             
             if (Math.random() < 0.6) {
-              updatePlayer({ occult: "Human", occultMeter: 50 });
-              addLog('The cure worked! You are human again.', 'Medical');
+              applyAction(
+                { money: player.money - 75000, occult: "Human", occultMeter: 50 },
+                'The cure worked! You are human again.',
+                'Medical'
+              );
             } else {
-              updatePlayer({ health: player.health - 30 });
-              addLog('The cure failed and damaged your health!', 'Medical');
+              applyAction(
+                { money: player.money - 75000, health: player.health - 30 },
+                'The cure failed and damaged your health!',
+                'Medical'
+              );
             }
-            saveGame();
           },
           disabled: player.money < 75000,
         },
@@ -170,6 +178,8 @@ export default function ActionsPanel() {
     a.download = `ByteLife_${player.name.replace(/\s+/g, '_')}_Archive.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    
+    addLog('Exported life archive to file.', 'System');
   };
 
   return (
@@ -250,8 +260,9 @@ export default function ActionsPanel() {
                 <strong>{ability.name}</strong>
                 <small>
                   {ability.description}
-                  {ability.risk && ` • Risk: ${Math.round(ability.risk * 100)}%`}
-                  {ability.cost && ` • Cost: $${ability.cost.toLocaleString()}`}
+                  {ability.risk ? ` • Risk: ${Math.round(ability.risk * 100)}%` : ''}
+                  {ability.scpRisk ? ` • SCP Risk: ${Math.round(ability.scpRisk * 100)}%` : ''}
+                  {ability.cost ? ` • Cost: $${ability.cost.toLocaleString()}` : ''}
                 </small>
               </div>
               <Button 

@@ -591,5 +591,11 @@ export const resolveOutcome = (option) => {
     }
   }
   
-  return option.outcomes[option.outcomes.length - 1];
+  const last = option.outcomes[option.outcomes.length - 1];
+  return {
+    message: last.message,
+    effects: { ...(option.effects || {}), ...(last.effects || {}) },
+    transform: last.transform,
+    supernatural: last.supernatural,
+  };
 };

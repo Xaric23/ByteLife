@@ -1,36 +1,49 @@
 import { useGame } from '../../context/GameContext';
 import { getRandomName, getRandomFirstName } from '../../data/names';
-import { occultTypes } from '../../data/occults';
 import { Button } from '../ui';
+import { safeUUID, safeParseName } from '../../utils/helpers';
 import styles from './Panel.module.css';
 
 export default function RelationsPanel() {
-  const { player, updatePlayer, addLog, showModal, saveGame } = useGame();
+  const { player, applyAction, addLog, showModal } = useGame();
 
   if (!player) return null;
 
   const chatWith = (index) => {
-    const member = player.family[index];
+    const member = player.family?.[index];
+    if (!member) return;
+    
     const newFamily = [...player.family];
     newFamily[index] = {
       ...member,
       relationship: Math.min(100, member.relationship + 15),
     };
-    updatePlayer({ family: newFamily, social: player.social + 5 });
-    addLog(`Had a nice conversation with ${member.name}.`, 'Social');
-    saveGame();
+    
+    applyAction(
+      { family: newFamily, social: player.social + 5 },
+      `Had a nice conversation with ${member.name}.`,
+      'Social'
+    );
   };
 
   const attemptIntimacy = (index) => {
-    const partner = player.family[index];
-    updatePlayer({ happiness: Math.min(100, player.happiness + 20) });
+    if (player.age < 18) {
+      addLog("You're too young for that.", 'System');
+      return;
+    }
+    
+    const partner = player.family?.[index];
+    if (!partner || partner.type !== 'Partner') return;
+    
+    const updates = { happiness: player.happiness + 20 };
     
     const isParentOccult = player.occult !== "Human";
     const isPartnerOccult = partner.occult !== "Human";
     
     if (Math.random() < 0.25) {
       const childGender = Math.random() > 0.5 ? "Male" : "Female";
-      const childName = `${getRandomFirstName(childGender)} ${player.name.split(" ")[1]}`;
+      const { last } = safeParseName(player.name);
+      const childName = `${getRandomFirstName(childGender)} ${last}`.trim();
       
       let inheritedOccult = "Human";
       let hybridCarrier = false;
@@ -54,7 +67,7 @@ export default function RelationsPanel() {
       }
       
       const newChild = {
-        id: crypto.randomUUID(),
+        id: safeUUID(),
         name: childName,
         age: 0,
         gender: childGender,
@@ -63,12 +76,11 @@ export default function RelationsPanel() {
         inheritedOccultStrain: inheritedOccult,
       };
       
-      updatePlayer({ children: [...player.children, newChild] });
-      addLog(`${partner.name} gave birth to ${childName}!`, 'Family');
+      updates.children = [...(player.children || []), newChild];
+      applyAction(updates, `${partner.name} gave birth to ${childName}!`, 'Family');
     } else {
-      addLog(`Spent intimate time with ${partner.name}.`, 'Relationship');
+      applyAction(updates, `Spent intimate time with ${partner.name}.`, 'Relationship');
     }
-    saveGame();
   };
 
   const openDating = () => {
@@ -77,9 +89,14 @@ export default function RelationsPanel() {
       return;
     }
     
-    const partnerGender = player.orientation === "Straight" 
-      ? (player.anatomy === "Male" ? "Female" : "Male")
-      : (Math.random() > 0.5 ? "Male" : "Female");
+    let partnerGender;
+    if (player.orientation === "Straight") {
+      partnerGender = player.anatomy === "Male" ? "Female" : "Male";
+    } else if (player.orientation === "Gay") {
+      partnerGender = player.anatomy === "Male" ? "Male" : "Female";
+    } else {
+      partnerGender = Math.random() > 0.5 ? "Male" : "Female";
+    }
     
     const partnerName = getRandomName(partnerGender);
     let partnerOccult = "Human";
@@ -97,17 +114,19 @@ export default function RelationsPanel() {
           text: 'Start Relationship',
           action: () => {
             const newPartner = {
-              id: crypto.randomUUID(),
+              id: safeUUID(),
               name: partnerName,
               relationship: 75,
               type: 'Partner',
               occult: partnerOccult,
               alive: true,
-              age: player.age + Math.floor(Math.random() * 10) - 5,
+              age: Math.max(18, player.age + Math.floor(Math.random() * 10) - 5),
             };
-            updatePlayer({ family: [...player.family, newPartner] });
-            addLog(`Started dating ${partnerName}!`, 'Dating');
-            saveGame();
+            applyAction(
+              { family: [...player.family, newPartner] },
+              `Started dating ${partnerName}!`,
+              'Dating'
+            );
           },
         },
         { text: 'Pass', action: () => {} },
@@ -124,10 +143,17 @@ export default function RelationsPanel() {
         </Button>
       </div>
 
-      {player.family.map((member, index) => (
+      {player.family?.length === 0 && (
+        <div className={styles.empty}>No family members.</div>
+      )}
+
+      {player.family?.map((member, index) => (
         <div key={member.id || index} className={styles.listRow}>
           <div className={styles.listInfo}>
-            <strong>{member.name}</strong>
+            <strong>
+              {member.name}
+              {!member.alive && ' (deceased)'}
+            </strong>
             <small>
               {member.type}{member.role ? ` (${member.role})` : ''} • 
               {member.occult !== "Human" ? ` ${member.occult} •` : ''} 
@@ -135,18 +161,20 @@ export default function RelationsPanel() {
               {member.age !== undefined && ` • Age ${member.age}`}
             </small>
           </div>
-          <div className={styles.actions}>
-            <Button size="small" onClick={() => chatWith(index)}>💬 Talk</Button>
-            {member.type === 'Partner' && (
-              <Button size="small" variant="success" onClick={() => attemptIntimacy(index)}>
-                💋 Intimacy
-              </Button>
-            )}
-          </div>
+          {member.alive && (
+            <div className={styles.actions}>
+              <Button size="small" onClick={() => chatWith(index)}>💬 Talk</Button>
+              {member.type === 'Partner' && player.age >= 18 && (
+                <Button size="small" variant="success" onClick={() => attemptIntimacy(index)}>
+                  💋 Intimacy
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       ))}
 
-      {player.children.length > 0 && (
+      {player.children?.length > 0 && (
         <>
           <h3 className={styles.sectionTitle} style={{ marginTop: '20px' }}>Children</h3>
           {player.children.map((child, index) => {

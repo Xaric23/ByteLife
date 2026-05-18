@@ -4,84 +4,105 @@ import { Button } from '../ui';
 import styles from './Panel.module.css';
 
 export default function MarketPanel() {
-  const { player, updatePlayer, addLog, showModal, saveGame } = useGame();
+  const { player, applyAction, addLog } = useGame();
 
   if (!player) return null;
 
   const buyStock = (stock, quantity = 1) => {
     const price = stock.basePrice * quantity;
-    if (player.money < price) return;
+    if (player.money < price) {
+      addLog(`Can't afford ${stock.title}.`, 'System');
+      return;
+    }
     
     const newPortfolio = { ...player.portfolio };
     newPortfolio[stock.id] = (newPortfolio[stock.id] || 0) + quantity;
     
-    updatePlayer({
-      money: player.money - price,
-      portfolio: newPortfolio,
-    });
-    addLog(`Bought ${quantity} share(s) of ${stock.title}.`, 'Investment');
-    saveGame();
+    applyAction(
+      { money: player.money - price, portfolio: newPortfolio },
+      `Bought ${quantity} share(s) of ${stock.title}.`,
+      'Investment'
+    );
   };
 
   const sellStock = (stock, quantity = 1) => {
-    const owned = player.portfolio[stock.id] || 0;
-    if (owned < quantity) return;
+    const owned = player.portfolio?.[stock.id] || 0;
+    if (owned < quantity) {
+      addLog(`You don't own enough ${stock.title} to sell.`, 'System');
+      return;
+    }
     
     const price = stock.basePrice * quantity;
     const newPortfolio = { ...player.portfolio };
     newPortfolio[stock.id] = owned - quantity;
     
-    updatePlayer({
-      money: player.money + price,
-      portfolio: newPortfolio,
-    });
-    addLog(`Sold ${quantity} share(s) of ${stock.title}.`, 'Investment');
-    saveGame();
+    applyAction(
+      { money: player.money + price, portfolio: newPortfolio },
+      `Sold ${quantity} share(s) of ${stock.title}.`,
+      'Investment'
+    );
   };
 
   const buyProperty = (property) => {
-    if (player.money < property.price) return;
+    if (player.money < property.price) {
+      addLog(`Can't afford ${property.title}.`, 'System');
+      return;
+    }
     
-    updatePlayer({
-      money: player.money - property.price,
-      properties: [...player.properties, { ...property, rented: false }],
-    });
-    addLog(`Purchased ${property.title} for $${property.price.toLocaleString()}.`, 'Real Estate');
-    saveGame();
+    applyAction(
+      { 
+        money: player.money - property.price,
+        properties: [...(player.properties || []), { ...property, rented: false }]
+      },
+      `Purchased ${property.title} for $${property.price.toLocaleString()}.`,
+      'Real Estate'
+    );
   };
 
   const toggleRent = (index) => {
+    const property = player.properties?.[index];
+    if (!property) return;
+    
     const newProperties = [...player.properties];
-    newProperties[index] = {
-      ...newProperties[index],
-      rented: !newProperties[index].rented,
-    };
-    updatePlayer({ properties: newProperties });
-    saveGame();
+    newProperties[index] = { ...property, rented: !property.rented };
+    
+    applyAction(
+      { properties: newProperties },
+      property.rented 
+        ? `Stopped renting out ${property.title}.`
+        : `Now renting out ${property.title} for $${(property.baseRent * 12).toLocaleString()}/year.`,
+      'Real Estate'
+    );
   };
 
   const sellProperty = (index) => {
-    const property = player.properties[index];
-    const salePrice = Math.floor(property.price * (0.8 + Math.random() * 0.4));
+    const property = player.properties?.[index];
+    if (!property) return;
     
+    const salePrice = Math.floor(property.price * (0.8 + Math.random() * 0.4));
     const newProperties = player.properties.filter((_, i) => i !== index);
-    updatePlayer({
-      money: player.money + salePrice,
-      properties: newProperties,
-    });
-    addLog(`Sold ${property.title} for $${salePrice.toLocaleString()}.`, 'Real Estate');
-    saveGame();
+    
+    applyAction(
+      { money: player.money + salePrice, properties: newProperties },
+      `Sold ${property.title} for $${salePrice.toLocaleString()}.`,
+      'Real Estate'
+    );
   };
 
   const buyVehicle = (vehicle) => {
-    if (player.money < vehicle.price) return;
+    if (player.money < vehicle.price) {
+      addLog(`Can't afford ${vehicle.title}.`, 'System');
+      return;
+    }
     
-    updatePlayer({
-      money: player.money - vehicle.price,
-      vehicles: [...(player.vehicles || []), { ...vehicle }],
-    });
-    addLog(`Purchased ${vehicle.title} for $${vehicle.price.toLocaleString()}.`, 'Purchase');
-    saveGame();
+    applyAction(
+      { 
+        money: player.money - vehicle.price,
+        vehicles: [...(player.vehicles || []), { ...vehicle }]
+      },
+      `Purchased ${vehicle.title} for $${vehicle.price.toLocaleString()}.`,
+      'Purchase'
+    );
   };
 
   const portfolioValue = Object.entries(player.portfolio || {}).reduce((total, [id, qty]) => {
@@ -90,27 +111,32 @@ export default function MarketPanel() {
   }, 0);
 
   const propertyValue = (player.properties || []).reduce((total, p) => total + p.price, 0);
+  const totalAssets = player.money + portfolioValue + propertyValue;
 
   return (
     <div className={styles.panel}>
       <div className={styles.summaryBar}>
         <div>
-          <small>Portfolio Value</small>
+          <small>Cash</small>
+          <strong>${player.money.toLocaleString()}</strong>
+        </div>
+        <div>
+          <small>Portfolio</small>
           <strong>${portfolioValue.toLocaleString()}</strong>
         </div>
         <div>
-          <small>Property Value</small>
+          <small>Property</small>
           <strong>${propertyValue.toLocaleString()}</strong>
         </div>
         <div>
-          <small>Total Assets</small>
-          <strong>${(player.money + portfolioValue + propertyValue).toLocaleString()}</strong>
+          <small>Total</small>
+          <strong>${totalAssets.toLocaleString()}</strong>
         </div>
       </div>
 
       <h3 className={styles.sectionTitle}>Stocks</h3>
       {stocks.map(stock => {
-        const owned = player.portfolio[stock.id] || 0;
+        const owned = player.portfolio?.[stock.id] || 0;
         return (
           <div key={stock.id} className={styles.listRow}>
             <div className={styles.listInfo}>
@@ -135,7 +161,7 @@ export default function MarketPanel() {
 
       <h3 className={styles.sectionTitle}>Cryptocurrency</h3>
       {crypto.map(coin => {
-        const owned = player.portfolio[coin.id] || 0;
+        const owned = player.portfolio?.[coin.id] || 0;
         return (
           <div key={coin.id} className={styles.listRow}>
             <div className={styles.listInfo}>
@@ -163,7 +189,7 @@ export default function MarketPanel() {
         <div className={styles.empty}>No properties owned.</div>
       ) : (
         player.properties.map((prop, index) => (
-          <div key={index} className={styles.listRow}>
+          <div key={`prop-${index}`} className={styles.listRow}>
             <div className={styles.listInfo}>
               <strong>{prop.title}</strong>
               <small>
@@ -174,7 +200,7 @@ export default function MarketPanel() {
             </div>
             <div className={styles.actions}>
               <Button size="small" onClick={() => toggleRent(index)}>
-                {prop.rented ? 'Stop Renting' : 'Rent Out'}
+                {prop.rented ? 'Stop Rent' : 'Rent Out'}
               </Button>
               <Button size="small" variant="danger" onClick={() => sellProperty(index)}>
                 Sell
@@ -208,7 +234,7 @@ export default function MarketPanel() {
       <h3 className={styles.sectionTitle}>Vehicles</h3>
       {(player.vehicles || []).length > 0 && (
         <div className={styles.ownedSection}>
-          <small>Owned Vehicles:</small>
+          <small>Owned:</small>
           {player.vehicles.map((v, i) => (
             <span key={i} className={styles.ownedBadge}>{v.title}</span>
           ))}

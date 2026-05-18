@@ -1,7 +1,8 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
-import { occultTypes, generateSCPDesignation, getRandomSupernaturalEvent } from '../data/occults';
+import { occultTypes, generateSCPDesignation } from '../data/occults';
 import { getRandomName } from '../data/names';
 import { selectRandomEvent, resolveOutcome } from '../data/events';
+import { safeUUID, clampPlayerStats, safeLocalStorage } from '../utils/helpers';
 
 const SAVE_KEY_PREFIX = 'bytelife_slot_';
 const SLOTS_INDEX_KEY = 'bytelife_slots_index';
@@ -36,8 +37,8 @@ const createInitialPlayer = (anatomy = "Male", orientation = "Straight") => ({
   scpContained: false,
   scpDesignation: null,
   family: [
-    { id: crypto.randomUUID(), name: getRandomName("Female"), relationship: 80, type: "Parent", role: "Mother", occult: "Human", alive: true, age: 25 },
-    { id: crypto.randomUUID(), name: getRandomName("Male"), relationship: 75, type: "Parent", role: "Father", occult: "Human", alive: true, age: 27 },
+    { id: safeUUID(), name: getRandomName("Female"), relationship: 80, type: "Parent", role: "Mother", occult: "Human", alive: true, age: 25 },
+    { id: safeUUID(), name: getRandomName("Male"), relationship: 75, type: "Parent", role: "Father", occult: "Human", alive: true, age: 27 },
   ],
   children: [],
   partners: [],
@@ -54,7 +55,6 @@ const initialState = {
   gamePhase: 'menu',
   modal: null,
   activeTab: 'log',
-  marketPrices: {},
   pendingEvents: [],
 };
 
@@ -81,13 +81,22 @@ function gameReducer(state, action) {
         gamePhase: 'playing',
       };
     
-    case 'UPDATE_PLAYER':
+    case 'UPDATE_PLAYER': {
+      const merged = { ...state.player, ...action.updates };
       return {
         ...state,
-        player: { ...state.player, ...action.updates },
+        player: clampPlayerStats(merged),
+      };
+    }
+    
+    case 'SET_PLAYER':
+      return {
+        ...state,
+        player: clampPlayerStats(action.player),
       };
     
     case 'ADD_LOG':
+      if (!state.player) return state;
       return {
         ...state,
         player: {
@@ -115,9 +124,6 @@ function gameReducer(state, action) {
     case 'SET_GAME_PHASE':
       return { ...state, gamePhase: action.phase };
     
-    case 'UPDATE_MARKET_PRICES':
-      return { ...state, marketPrices: action.prices };
-    
     case 'DEATH':
       return {
         ...state,
@@ -128,7 +134,7 @@ function gameReducer(state, action) {
     case 'SUCCESSION':
       return {
         ...state,
-        player: action.newPlayer,
+        player: clampPlayerStats(action.newPlayer),
         gamePhase: 'playing',
       };
     
@@ -163,31 +169,50 @@ const GameContext = createContext(null);
 
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const playerRef = useRef(state.player);
+  const slotRef = useRef(state.currentSlot);
+  
+  useEffect(() => {
+    playerRef.current = state.player;
+    slotRef.current = state.currentSlot;
+  }, [state.player, state.currentSlot]);
 
   useEffect(() => {
-    const slotsJson = localStorage.getItem(SLOTS_INDEX_KEY);
-    const slots = slotsJson ? JSON.parse(slotsJson) : [];
+    const slotsJson = safeLocalStorage.getItem(SLOTS_INDEX_KEY);
+    const slots = safeLocalStorage.parseJSON(slotsJson, []);
     dispatch({ type: 'LOAD_SLOTS', slots });
   }, []);
 
-  const saveGame = useCallback((slotId = state.currentSlot) => {
-    if (!state.player || !slotId) return;
+  const saveGame = useCallback((playerOverride = null, slotOverride = null) => {
+    const playerToSave = playerOverride || playerRef.current;
+    const slotId = slotOverride || slotRef.current;
+    
+    if (!playerToSave || !slotId) return false;
     
     const saveData = {
-      player: state.player,
+      player: playerToSave,
       savedAt: new Date().toISOString(),
       version: 1,
     };
     
-    localStorage.setItem(`${SAVE_KEY_PREFIX}${slotId}`, JSON.stringify(saveData));
+    const saved = safeLocalStorage.setItem(
+      `${SAVE_KEY_PREFIX}${slotId}`, 
+      JSON.stringify(saveData)
+    );
     
-    let slots = JSON.parse(localStorage.getItem(SLOTS_INDEX_KEY) || '[]');
+    if (!saved) return false;
+    
+    let slots = safeLocalStorage.parseJSON(
+      safeLocalStorage.getItem(SLOTS_INDEX_KEY), 
+      []
+    );
+    
     const existingIndex = slots.findIndex(s => s.id === slotId);
     const slotInfo = {
       id: slotId,
-      name: state.player.name,
-      age: state.player.age,
-      occult: state.player.occult,
+      name: playerToSave.name,
+      age: playerToSave.age,
+      occult: playerToSave.occult,
       savedAt: saveData.savedAt,
     };
     
@@ -197,44 +222,40 @@ export function GameProvider({ children }) {
       slots.push(slotInfo);
     }
     
-    localStorage.setItem(SLOTS_INDEX_KEY, JSON.stringify(slots));
-    localStorage.setItem(CURRENT_SLOT_KEY, slotId);
+    safeLocalStorage.setItem(SLOTS_INDEX_KEY, JSON.stringify(slots));
+    safeLocalStorage.setItem(CURRENT_SLOT_KEY, slotId);
     dispatch({ type: 'LOAD_SLOTS', slots });
     dispatch({ type: 'SET_CURRENT_SLOT', slot: slotId });
-  }, [state.player, state.currentSlot]);
+    
+    return true;
+  }, []);
 
   const loadGame = useCallback((slotId) => {
-    const saveJson = localStorage.getItem(`${SAVE_KEY_PREFIX}${slotId}`);
-    if (!saveJson) return false;
+    const saveJson = safeLocalStorage.getItem(`${SAVE_KEY_PREFIX}${slotId}`);
+    const saveData = safeLocalStorage.parseJSON(saveJson);
     
-    try {
-      const saveData = JSON.parse(saveJson);
-      dispatch({ type: 'LOAD_GAME', player: saveData.player, slot: slotId });
-      localStorage.setItem(CURRENT_SLOT_KEY, slotId);
-      return true;
-    } catch {
-      return false;
-    }
+    if (!saveData?.player) return false;
+    
+    dispatch({ type: 'LOAD_GAME', player: saveData.player, slot: slotId });
+    safeLocalStorage.setItem(CURRENT_SLOT_KEY, slotId);
+    return true;
   }, []);
 
   const deleteSlot = useCallback((slotId) => {
-    localStorage.removeItem(`${SAVE_KEY_PREFIX}${slotId}`);
-    let slots = JSON.parse(localStorage.getItem(SLOTS_INDEX_KEY) || '[]');
+    safeLocalStorage.removeItem(`${SAVE_KEY_PREFIX}${slotId}`);
+    let slots = safeLocalStorage.parseJSON(
+      safeLocalStorage.getItem(SLOTS_INDEX_KEY), 
+      []
+    );
     slots = slots.filter(s => s.id !== slotId);
-    localStorage.setItem(SLOTS_INDEX_KEY, JSON.stringify(slots));
+    safeLocalStorage.setItem(SLOTS_INDEX_KEY, JSON.stringify(slots));
     dispatch({ type: 'LOAD_SLOTS', slots });
   }, []);
 
   const startNewGame = useCallback((anatomy, orientation) => {
-    const slotId = crypto.randomUUID();
+    const slotId = safeUUID();
     dispatch({ type: 'START_NEW_GAME', anatomy, orientation });
     dispatch({ type: 'SET_CURRENT_SLOT', slot: slotId });
-    
-    setTimeout(() => {
-      const slotsJson = localStorage.getItem(SLOTS_INDEX_KEY);
-      const slots = slotsJson ? JSON.parse(slotsJson) : [];
-      dispatch({ type: 'LOAD_SLOTS', slots });
-    }, 100);
   }, []);
 
   const addLog = useCallback((message, actionName = 'Event') => {
@@ -245,24 +266,25 @@ export function GameProvider({ children }) {
     dispatch({ type: 'UPDATE_PLAYER', updates });
   }, []);
 
-  const clampStats = useCallback(() => {
+  const applyAction = useCallback((updates, logMessage, logCategory = 'Action') => {
     if (!state.player) return;
-    const clamped = {};
-    ['happiness', 'health', 'smarts', 'social', 'occultMeter'].forEach(stat => {
-      if (state.player[stat] !== undefined) {
-        clamped[stat] = Math.max(0, Math.min(100, state.player[stat]));
-      }
-    });
-    if (Object.keys(clamped).length > 0) {
-      dispatch({ type: 'UPDATE_PLAYER', updates: clamped });
+    
+    const nextPlayer = clampPlayerStats({ ...state.player, ...updates });
+    dispatch({ type: 'SET_PLAYER', player: nextPlayer });
+    
+    if (logMessage) {
+      dispatch({ type: 'ADD_LOG', message: logMessage, actionName: logCategory });
     }
-  }, [state.player]);
+    
+    setTimeout(() => saveGame(nextPlayer), 0);
+  }, [state.player, saveGame]);
 
   const ageUp = useCallback(() => {
     if (!state.player?.alive) return;
     
     const player = state.player;
     const updates = { age: player.age + 1, yearsPlayed: player.yearsPlayed + 1 };
+    const logs = [];
     
     if (player.job && !player.inPrison && !player.scpContained) {
       updates.money = (player.money || 0) + player.job.salary;
@@ -271,7 +293,7 @@ export function GameProvider({ children }) {
     if (player.studentDebt > 0) {
       updates.studentDebt = Math.floor(player.studentDebt * 1.05);
       const payment = Math.min(updates.studentDebt, 5000);
-      updates.money = (updates.money || player.money) - payment;
+      updates.money = (updates.money ?? player.money) - payment;
       updates.studentDebt -= payment;
     }
     
@@ -280,7 +302,7 @@ export function GameProvider({ children }) {
       if (updates.educationYearsLeft <= 0) {
         updates.education = player.enrolledEducation;
         updates.enrolledEducation = null;
-        addLog(`Graduated with a ${player.enrolledEducation} degree!`, 'Education');
+        logs.push({ msg: `Graduated with a ${player.enrolledEducation} degree!`, cat: 'Education' });
       }
     }
     
@@ -288,20 +310,23 @@ export function GameProvider({ children }) {
       updates.prisonYearsLeft = player.prisonYearsLeft - 1;
       if (updates.prisonYearsLeft <= 0) {
         updates.inPrison = false;
-        addLog('Released from prison!', 'Prison');
+        logs.push({ msg: 'Released from prison!', cat: 'Prison' });
       }
     }
     
+    let propertyIncome = 0;
+    let propertyExpenses = 0;
     player.properties?.forEach(prop => {
-      if (prop.rented) {
-        updates.money = (updates.money || player.money) + (prop.baseRent * 12);
-      }
-      updates.money = (updates.money || player.money) - prop.upkeep;
+      if (prop.rented) propertyIncome += (prop.baseRent * 12);
+      propertyExpenses += prop.upkeep;
     });
     
+    let vehicleExpenses = 0;
     player.vehicles?.forEach(vehicle => {
-      updates.money = (updates.money || player.money) - vehicle.upkeep;
+      vehicleExpenses += vehicle.upkeep;
     });
+    
+    updates.money = (updates.money ?? player.money) + propertyIncome - propertyExpenses - vehicleExpenses;
     
     const occult = occultTypes[player.occult];
     if (occult && player.occult !== "Human") {
@@ -315,40 +340,52 @@ export function GameProvider({ children }) {
         updates.scpContained = true;
         updates.scpDesignation = generateSCPDesignation(player.occult);
         updates.job = null;
-        addLog(`Captured by the SCP Foundation! Designated as ${updates.scpDesignation}`, 'SCP');
+        logs.push({ msg: `Captured by the SCP Foundation! Designated as ${updates.scpDesignation}`, cat: 'SCP' });
       }
     }
     
     if (occult?.healthDecay) {
       const decay = Math.floor(Math.random() * (occult.healthDecay.max - occult.healthDecay.min + 1)) + occult.healthDecay.min;
-      updates.health = (updates.health || player.health) - decay;
+      updates.health = (updates.health ?? player.health) - decay;
     }
     
-    player.family?.forEach((member, i) => {
-      if (member.alive && member.age) {
-        if (!updates.family) updates.family = [...player.family];
-        updates.family[i] = { ...member, age: member.age + 1 };
-      }
-    });
+    if (player.family?.length > 0) {
+      updates.family = player.family.map(member => {
+        if (member.alive && member.age !== undefined) {
+          const newAge = member.age + 1;
+          if (member.type === 'Parent' && newAge > 75 && Math.random() < (newAge - 75) * 0.03) {
+            logs.push({ msg: `${member.name} has passed away.`, cat: 'Family' });
+            return { ...member, age: newAge, alive: false };
+          }
+          return { ...member, age: newAge };
+        }
+        return member;
+      });
+    }
     
-    player.children?.forEach((child, i) => {
-      if (!updates.children) updates.children = [...player.children];
-      updates.children[i] = { ...child, age: child.age + 1 };
-      
-      if (child.hybridMutationCarrier && !child.mutationAwakened && child.age + 1 === 14) {
-        updates.children[i].mutationAwakened = true;
-        addLog(`${child.name} has awakened their latent ${child.inheritedOccultStrain} traits!`, 'Supernatural');
-      }
-    });
+    if (player.children?.length > 0) {
+      updates.children = player.children.map(child => {
+        const newChild = { ...child, age: child.age + 1 };
+        if (child.hybridMutationCarrier && !child.mutationAwakened && newChild.age === 14) {
+          newChild.mutationAwakened = true;
+          logs.push({ msg: `${child.name} has awakened their latent ${child.inheritedOccultStrain} traits!`, cat: 'Supernatural' });
+        }
+        return newChild;
+      });
+    }
     
-    dispatch({ type: 'UPDATE_PLAYER', updates });
-    addLog('Another year passes...', 'Age');
+    const nextPlayer = clampPlayerStats({ ...player, ...updates });
+    dispatch({ type: 'SET_PLAYER', player: nextPlayer });
     
-    const newHealth = updates.health ?? player.health;
-    const newAge = updates.age;
+    logs.forEach(l => dispatch({ type: 'ADD_LOG', message: l.msg, actionName: l.cat }));
+    dispatch({ type: 'ADD_LOG', message: 'Another year passes...', actionName: 'Age' });
+    
+    const newHealth = nextPlayer.health;
+    const newAge = nextPlayer.age;
     
     if (newHealth <= 0) {
       dispatch({ type: 'DEATH' });
+      saveGame(nextPlayer);
       return;
     }
     
@@ -356,33 +393,30 @@ export function GameProvider({ children }) {
       const deathChance = (newAge - 80) * 0.05;
       if (Math.random() < deathChance) {
         dispatch({ type: 'DEATH' });
+        saveGame(nextPlayer);
         return;
       }
     }
     
-    // Random life events - 40-70% chance per year depending on age
-    const eventChance = player.age < 10 ? 0.4 : player.age < 18 ? 0.55 : player.age < 60 ? 0.65 : 0.5;
-    const numEventRolls = player.age < 5 ? 1 : player.age < 18 ? 2 : 3; // More rolls = more potential events
+    const eventChance = newAge < 10 ? 0.45 : newAge < 18 ? 0.6 : newAge < 60 ? 0.7 : 0.55;
+    const numEventRolls = newAge < 5 ? 1 : newAge < 18 ? 2 : 3;
     
     const eventsToQueue = [];
     for (let i = 0; i < numEventRolls; i++) {
       if (Math.random() < eventChance) {
-        const updatedPlayer = { ...player, ...updates, age: newAge };
-        const event = selectRandomEvent(updatedPlayer);
+        const event = selectRandomEvent(nextPlayer);
         if (event && !eventsToQueue.find(e => e.id === event.id)) {
           eventsToQueue.push(event);
         }
       }
     }
     
-    // Queue events to show after age up
     eventsToQueue.forEach(event => {
       dispatch({ type: 'QUEUE_EVENT', event });
     });
     
-    clampStats();
-    saveGame();
-  }, [state.player, addLog, updatePlayer, clampStats, saveGame]);
+    saveGame(nextPlayer);
+  }, [state.player, saveGame]);
 
   const showModal = useCallback((modal) => {
     dispatch({ type: 'SHOW_MODAL', modal });
@@ -391,8 +425,6 @@ export function GameProvider({ children }) {
   const hideModal = useCallback(() => {
     dispatch({ type: 'HIDE_MODAL' });
   }, []);
-
-  const showEventModalRef = useRef(null);
 
   const processNextEvent = useCallback(() => {
     dispatch({ type: 'CLEAR_PENDING_EVENT' });
@@ -412,34 +444,33 @@ export function GameProvider({ children }) {
         text: opt.text,
         action: () => {
           const result = resolveOutcome(opt);
-          
-          // Apply effects
           const updates = {};
+          
           if (result.effects) {
             Object.entries(result.effects).forEach(([key, value]) => {
               if (key === 'money') {
                 updates.money = (player.money || 0) + value;
-              } else if (['happiness', 'health', 'smarts', 'social'].includes(key)) {
-                updates[key] = Math.max(0, Math.min(100, (player[key] || 50) + value));
+              } else if (['happiness', 'health', 'smarts', 'social', 'karma'].includes(key)) {
+                updates[key] = (player[key] || 50) + value;
               }
             });
           }
           
-          // Handle supernatural transformation
           if (result.transform) {
             updates.occult = result.transform;
             updates.occultMeter = 70;
-            addLog(`You have become a ${result.transform}!`, 'Supernatural');
           }
           
-          if (Object.keys(updates).length > 0) {
-            updatePlayer(updates);
-          }
+          const nextPlayer = clampPlayerStats({ ...player, ...updates });
+          dispatch({ type: 'SET_PLAYER', player: nextPlayer });
           
-          addLog(result.message, event.title);
+          if (result.transform) {
+            dispatch({ type: 'ADD_LOG', message: `You have become a ${result.transform}!`, actionName: 'Supernatural' });
+          }
+          dispatch({ type: 'ADD_LOG', message: result.message, actionName: event.title });
           dispatch({ type: 'HIDE_MODAL' });
           processNextEvent();
-          saveGame();
+          saveGame(nextPlayer);
         },
       }));
 
@@ -451,51 +482,48 @@ export function GameProvider({ children }) {
         options,
       },
     });
-  }, [state.player, addLog, updatePlayer, saveGame, processNextEvent]);
+  }, [state.player, saveGame, processNextEvent]);
 
-  // Store ref for use in ageUp
-  showEventModalRef.current = showEventModal;
-
-  // Process pending events queue
   useEffect(() => {
     if (state.pendingEvents.length > 0 && !state.modal) {
       const timer = setTimeout(() => {
-        showEventModalRef.current?.(state.pendingEvents[0]);
-      }, 100);
+        showEventModal(state.pendingEvents[0]);
+      }, 150);
       return () => clearTimeout(timer);
     }
-  }, [state.pendingEvents, state.modal]);
+  }, [state.pendingEvents, state.modal, showEventModal]);
 
   const setTab = useCallback((tab) => {
     dispatch({ type: 'SET_TAB', tab });
   }, []);
 
   const goToMenu = useCallback(() => {
-    if (state.player && state.currentSlot) {
-      saveGame();
+    if (playerRef.current && slotRef.current) {
+      saveGame(playerRef.current, slotRef.current);
     }
     dispatch({ type: 'RESET_TO_MENU' });
-  }, [state.player, state.currentSlot, saveGame]);
+  }, [saveGame]);
 
   const handleSuccession = useCallback((childIndex) => {
-    const child = state.player.children[childIndex];
+    const player = state.player;
+    const child = player?.children?.[childIndex];
     if (!child) return;
     
     const newPlayer = {
-      ...createInitialPlayer(state.player.anatomy, state.player.orientation),
+      ...createInitialPlayer(player.anatomy, player.orientation),
       name: child.name,
       age: child.age,
-      money: state.player.money + 20000,
+      money: player.money + 20000,
       occult: child.inheritedOccultStrain || "Human",
       occultMeter: child.mutationAwakened ? 60 : 50,
       sessionLogs: [
-        ...state.player.sessionLogs,
+        ...player.sessionLogs,
         { age: 0, time: new Date().toLocaleTimeString(), money: 0, action: 'Succession', outcome: `Now playing as ${child.name}` },
       ],
     };
     
     dispatch({ type: 'SUCCESSION', newPlayer });
-    saveGame();
+    setTimeout(() => saveGame(newPlayer), 0);
   }, [state.player, saveGame]);
 
   const value = {
@@ -507,13 +535,13 @@ export function GameProvider({ children }) {
     startNewGame,
     addLog,
     updatePlayer,
+    applyAction,
     ageUp,
     showModal,
     hideModal,
     setTab,
     goToMenu,
     handleSuccession,
-    clampStats,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

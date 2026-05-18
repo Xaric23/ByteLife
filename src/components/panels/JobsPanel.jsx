@@ -4,7 +4,7 @@ import { Button } from '../ui';
 import styles from './Panel.module.css';
 
 export default function JobsPanel() {
-  const { player, updatePlayer, addLog, saveGame } = useGame();
+  const { player, applyAction, addLog } = useGame();
 
   if (!player) return null;
 
@@ -15,20 +15,24 @@ export default function JobsPanel() {
     const chance = Math.min(0.95, Math.max(0.2, baseChance));
     
     if (Math.random() < chance) {
-      updatePlayer({ job: career });
-      addLog(`Got hired as a ${career.title}!`, 'Career');
+      applyAction(
+        { job: career },
+        `Got hired as a ${career.title}!`,
+        'Career'
+      );
     } else {
       addLog(`Application for ${career.title} was rejected.`, 'Career');
     }
-    saveGame();
   };
 
   const quitJob = () => {
-    if (player.job) {
-      addLog(`Quit job as ${player.job.title}.`, 'Career');
-      updatePlayer({ job: null });
-      saveGame();
-    }
+    if (!player.job) return;
+    
+    applyAction(
+      { job: null },
+      `Quit job as ${player.job.title}.`,
+      'Career'
+    );
   };
 
   return (

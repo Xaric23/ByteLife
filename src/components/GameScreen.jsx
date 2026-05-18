@@ -7,7 +7,7 @@ import { Button, Modal } from './ui';
 import styles from './GameScreen.module.css';
 
 export default function GameScreen() {
-  const { player, activeTab, ageUp, modal, hideModal, goToMenu, saveGame, updatePlayer, addLog } = useGame();
+  const { player, activeTab, ageUp, modal, hideModal, goToMenu, applyAction } = useGame();
 
   if (!player) return null;
 
@@ -24,15 +24,19 @@ export default function GameScreen() {
   };
 
   const handleStudy = () => {
-    updatePlayer({ smarts: Math.min(100, player.smarts + 5) });
-    addLog('Studied hard and improved intelligence.', 'Activity');
-    saveGame();
+    applyAction(
+      { smarts: player.smarts + 5 },
+      'Studied hard and improved intelligence.',
+      'Activity'
+    );
   };
 
   const handleGym = () => {
-    updatePlayer({ health: Math.min(100, player.health + 5) });
-    addLog('Worked out at the gym.', 'Activity');
-    saveGame();
+    applyAction(
+      { health: player.health + 5 },
+      'Worked out at the gym.',
+      'Activity'
+    );
   };
 
   return (

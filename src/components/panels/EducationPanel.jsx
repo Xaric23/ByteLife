@@ -4,7 +4,7 @@ import { Button } from '../ui';
 import styles from './Panel.module.css';
 
 export default function EducationPanel() {
-  const { player, updatePlayer, addLog, saveGame } = useGame();
+  const { player, applyAction, addLog } = useGame();
 
   if (!player) return null;
 
@@ -21,27 +21,49 @@ export default function EducationPanel() {
   };
 
   const enroll = (level, info) => {
-    if (!canEnroll(level, info)) return;
+    if (!canEnroll(level, info)) {
+      addLog(`Can't enroll in ${level} program right now.`, 'System');
+      return;
+    }
     
-    updatePlayer({
-      enrolledEducation: level,
-      educationYearsLeft: info.duration,
-      studentDebt: player.studentDebt + info.cost,
-      money: player.money - Math.min(player.money, info.cost * 0.1),
-    });
-    addLog(`Enrolled in ${level} program!`, 'Education');
-    saveGame();
+    const downPayment = Math.min(player.money, info.cost * 0.1);
+    
+    applyAction(
+      {
+        enrolledEducation: level,
+        educationYearsLeft: info.duration,
+        studentDebt: player.studentDebt + info.cost,
+        money: player.money - downPayment,
+      },
+      `Enrolled in ${level} program!`,
+      'Education'
+    );
   };
 
   const dropOut = () => {
-    if (player.enrolledEducation) {
-      addLog(`Dropped out of ${player.enrolledEducation} program.`, 'Education');
-      updatePlayer({
-        enrolledEducation: null,
-        educationYearsLeft: 0,
-      });
-      saveGame();
-    }
+    if (!player.enrolledEducation) return;
+    
+    applyAction(
+      { enrolledEducation: null, educationYearsLeft: 0 },
+      `Dropped out of ${player.enrolledEducation} program.`,
+      'Education'
+    );
+  };
+
+  const study = () => {
+    applyAction(
+      { smarts: player.smarts + 3 },
+      'Spent time studying.',
+      'Education'
+    );
+  };
+
+  const readBooks = () => {
+    applyAction(
+      { smarts: player.smarts + 2, happiness: player.happiness + 5 },
+      'Read some interesting books.',
+      'Education'
+    );
   };
 
   return (
@@ -94,9 +116,9 @@ export default function EducationPanel() {
               <small>
                 {info.duration > 0 ? `${info.duration} years` : 'Complete'} • 
                 Cost: ${info.cost.toLocaleString()}
-                {info.reqSmarts && ` • Requires ${info.reqSmarts}% Smarts`}
-                {info.reqEducation && ` • Requires ${info.reqEducation}`}
-                {info.minAge > 0 && ` • Min Age: ${info.minAge}`}
+                {info.reqSmarts ? ` • Requires ${info.reqSmarts}% Smarts` : ''}
+                {info.reqEducation ? ` • Requires ${info.reqEducation}` : ''}
+                {info.minAge > 0 ? ` • Min Age: ${info.minAge}` : ''}
               </small>
             </div>
             {!completed && info.duration > 0 && (
@@ -121,14 +143,7 @@ export default function EducationPanel() {
           <strong>📚 Study Session</strong>
           <small>Improve your intelligence through dedicated study</small>
         </div>
-        <Button 
-          size="small"
-          onClick={() => {
-            updatePlayer({ smarts: Math.min(100, player.smarts + 3) });
-            addLog('Spent time studying.', 'Education');
-            saveGame();
-          }}
-        >
+        <Button size="small" onClick={study}>
           Study (+3 Smarts)
         </Button>
       </div>
@@ -138,17 +153,7 @@ export default function EducationPanel() {
           <strong>📖 Read Books</strong>
           <small>Expand your knowledge through literature</small>
         </div>
-        <Button 
-          size="small"
-          onClick={() => {
-            updatePlayer({ 
-              smarts: Math.min(100, player.smarts + 2),
-              happiness: Math.min(100, player.happiness + 5),
-            });
-            addLog('Read some interesting books.', 'Education');
-            saveGame();
-          }}
-        >
+        <Button size="small" onClick={readBooks}>
           Read (+2 Smarts)
         </Button>
       </div>
