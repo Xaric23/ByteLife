@@ -1,6 +1,7 @@
-import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { occultTypes, generateSCPDesignation, getRandomSupernaturalEvent } from '../data/occults';
 import { getRandomName } from '../data/names';
+import { selectRandomEvent, resolveOutcome } from '../data/events';
 
 const SAVE_KEY_PREFIX = 'bytelife_slot_';
 const SLOTS_INDEX_KEY = 'bytelife_slots_index';
@@ -54,6 +55,7 @@ const initialState = {
   modal: null,
   activeTab: 'log',
   marketPrices: {},
+  pendingEvents: [],
 };
 
 function gameReducer(state, action) {
@@ -137,6 +139,19 @@ function gameReducer(state, action) {
         currentSlot: null,
         gamePhase: 'menu',
         modal: null,
+        pendingEvents: [],
+      };
+    
+    case 'QUEUE_EVENT':
+      return {
+        ...state,
+        pendingEvents: [...state.pendingEvents, action.event],
+      };
+    
+    case 'CLEAR_PENDING_EVENT':
+      return {
+        ...state,
+        pendingEvents: state.pendingEvents.slice(1),
       };
     
     default:
@@ -345,40 +360,25 @@ export function GameProvider({ children }) {
       }
     }
     
-    if (player.occult === "Human" && !player.scpContained && player.age > 16 && Math.random() < 0.04) {
-      const event = getRandomSupernaturalEvent(player.age);
-      if (event) {
-        dispatch({
-          type: 'SHOW_MODAL',
-          modal: {
-            title: event.name,
-            description: event.description,
-            options: [
-              {
-                text: `Accept the ${event.resultOccult} curse`,
-                action: () => {
-                  updatePlayer({ occult: event.resultOccult, occultMeter: 70 });
-                  addLog(`Transformed into a ${event.resultOccult}!`, 'Supernatural');
-                  dispatch({ type: 'HIDE_MODAL' });
-                },
-              },
-              {
-                text: 'Resist (50% chance)',
-                action: () => {
-                  if (Math.random() < 0.5) {
-                    addLog('You fought off the supernatural influence!', 'Supernatural');
-                  } else {
-                    updatePlayer({ occult: event.resultOccult, occultMeter: 70 });
-                    addLog(`Failed to resist! Transformed into a ${event.resultOccult}!`, 'Supernatural');
-                  }
-                  dispatch({ type: 'HIDE_MODAL' });
-                },
-              },
-            ],
-          },
-        });
+    // Random life events - 40-70% chance per year depending on age
+    const eventChance = player.age < 10 ? 0.4 : player.age < 18 ? 0.55 : player.age < 60 ? 0.65 : 0.5;
+    const numEventRolls = player.age < 5 ? 1 : player.age < 18 ? 2 : 3; // More rolls = more potential events
+    
+    const eventsToQueue = [];
+    for (let i = 0; i < numEventRolls; i++) {
+      if (Math.random() < eventChance) {
+        const updatedPlayer = { ...player, ...updates, age: newAge };
+        const event = selectRandomEvent(updatedPlayer);
+        if (event && !eventsToQueue.find(e => e.id === event.id)) {
+          eventsToQueue.push(event);
+        }
       }
     }
+    
+    // Queue events to show after age up
+    eventsToQueue.forEach(event => {
+      dispatch({ type: 'QUEUE_EVENT', event });
+    });
     
     clampStats();
     saveGame();
@@ -391,6 +391,80 @@ export function GameProvider({ children }) {
   const hideModal = useCallback(() => {
     dispatch({ type: 'HIDE_MODAL' });
   }, []);
+
+  const showEventModalRef = useRef(null);
+
+  const processNextEvent = useCallback(() => {
+    dispatch({ type: 'CLEAR_PENDING_EVENT' });
+  }, []);
+
+  const showEventModal = useCallback((event) => {
+    if (!event || !state.player) return;
+    
+    const player = state.player;
+    
+    const options = event.options
+      .filter(opt => {
+        if (opt.minMoney && player.money < opt.minMoney) return false;
+        return true;
+      })
+      .map(opt => ({
+        text: opt.text,
+        action: () => {
+          const result = resolveOutcome(opt);
+          
+          // Apply effects
+          const updates = {};
+          if (result.effects) {
+            Object.entries(result.effects).forEach(([key, value]) => {
+              if (key === 'money') {
+                updates.money = (player.money || 0) + value;
+              } else if (['happiness', 'health', 'smarts', 'social'].includes(key)) {
+                updates[key] = Math.max(0, Math.min(100, (player[key] || 50) + value));
+              }
+            });
+          }
+          
+          // Handle supernatural transformation
+          if (result.transform) {
+            updates.occult = result.transform;
+            updates.occultMeter = 70;
+            addLog(`You have become a ${result.transform}!`, 'Supernatural');
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            updatePlayer(updates);
+          }
+          
+          addLog(result.message, event.title);
+          dispatch({ type: 'HIDE_MODAL' });
+          processNextEvent();
+          saveGame();
+        },
+      }));
+
+    dispatch({
+      type: 'SHOW_MODAL',
+      modal: {
+        title: event.title,
+        description: event.description,
+        options,
+      },
+    });
+  }, [state.player, addLog, updatePlayer, saveGame, processNextEvent]);
+
+  // Store ref for use in ageUp
+  showEventModalRef.current = showEventModal;
+
+  // Process pending events queue
+  useEffect(() => {
+    if (state.pendingEvents.length > 0 && !state.modal) {
+      const timer = setTimeout(() => {
+        showEventModalRef.current?.(state.pendingEvents[0]);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [state.pendingEvents, state.modal]);
 
   const setTab = useCallback((tab) => {
     dispatch({ type: 'SET_TAB', tab });
