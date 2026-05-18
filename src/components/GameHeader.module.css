@@ -1,0 +1,130 @@
+.header {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.contained {
+  background: linear-gradient(135deg, #241217, #111) !important;
+  border: 1px solid var(--scp-red) !important;
+  box-shadow: 0 0 20px rgba(217, 4, 41, 0.3) !important;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+}
+
+.identitySection {
+  background: var(--surface-card);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  border: 1px solid var(--border-ui);
+}
+
+.contained .identitySection {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(90deg, #fff, var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.debt {
+  font-size: 0.8rem;
+  color: var(--danger-color);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.financialSection {
+  background: var(--surface-card);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  border: 1px solid var(--border-ui);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.contained .financialSection {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.moneyLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.money {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--money-color);
+  text-shadow: 0 4px 12px rgba(46, 196, 182, 0.15);
+}
+
+@media (max-width: 600px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+  
+  .name {
+    font-size: 1.3rem;
+  }
+  
+  .meta {
+    font-size: 0.75rem;
+    gap: 6px;
+  }
+  
+  .badge {
+    padding: 3px 10px;
+  }
+  
+  .financialSection {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .money {
+    font-size: 1.5rem;
+  }
+}

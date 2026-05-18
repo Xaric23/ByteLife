@@ -1,0 +1,80 @@
+.wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100vh;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  min-height: 400px;
+}
+
+.viewport {
+  background: var(--log-bg);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  border: 1px solid var(--border-ui);
+  overflow-y: auto;
+  max-height: 450px;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+.ageButton {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .mainContent {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .viewport {
+    max-height: 350px;
+    padding: 16px;
+  }
+  
+  .controls {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .controls > button:first-child {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 10px;
+  }
+  
+  .viewport {
+    max-height: 300px;
+    padding: 12px;
+    border-radius: var(--radius-lg);
+  }
+}

@@ -1,0 +1,133 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #0b0c10 100%);
+}
+
+.content {
+  width: 100%;
+  max-width: 500px;
+  background: var(--surface-card);
+  border-radius: var(--radius-2xl);
+  padding: 40px 30px;
+  border: 1px solid var(--border-ui);
+  text-align: center;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--danger-color);
+}
+
+.name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 16px 0 8px 0;
+}
+
+.age {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.statValue {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.succession {
+  margin-bottom: 30px;
+}
+
+.succession h2 {
+  font-size: 1.2rem;
+  color: var(--text-main);
+  margin: 0 0 10px 0;
+}
+
+.succession p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 20px 0;
+}
+
+.heirs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.noHeirs {
+  background: rgba(239, 71, 111, 0.1);
+  border: 1px solid rgba(239, 71, 111, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.noHeirs p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.noHeirs p:first-child {
+  font-size: 1.1rem;
+  color: var(--danger-color);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.actions {
+  padding-top: 20px;
+  border-top: 1px solid var(--border-ui);
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 30px 20px;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

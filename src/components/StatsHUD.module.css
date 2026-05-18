@@ -1,0 +1,19 @@
+.hud {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .hud {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .hud {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
