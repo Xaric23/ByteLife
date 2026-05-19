@@ -1,48 +1,83 @@
 :root {
-  --bg-color: #0b0c10;
-  --surface-bg: #1f2833;
-  --surface-card: #151a22;
-  --text-main: #f5f5fa;
-  --text-muted: #8b9bb4;
+  /* Core backgrounds */
+  --bg-color: #080a0f;
+  --bg-gradient: linear-gradient(135deg, #080a0f 0%, #0d1117 50%, #0a0e14 100%);
+  --surface-bg: #12161f;
+  --surface-card: #0f1318;
+  --surface-hover: #1a1f2a;
   
-  --accent-color: #45f3ff;
-  --accent-glow: rgba(69, 243, 255, 0.3);
+  /* Text */
+  --text-main: #e6edf3;
+  --text-muted: #7d8590;
+  --text-faint: #484f58;
   
-  --happy-color: #ff007f;
-  --health-color: #00f5d4;
-  --smart-color: #ffb703;
-  --social-color: #7b2cbf;
-  --money-color: #2ec4b6;
-  --karma-color: #ffd60a;
+  /* Primary accent - cyan/teal */
+  --accent-color: #58a6ff;
+  --accent-light: #79c0ff;
+  --accent-glow: rgba(88, 166, 255, 0.4);
+  --accent-gradient: linear-gradient(135deg, #58a6ff, #1f6feb);
   
-  --vampire-blood: #9a031e;
-  --werewolf-fury: #e36414;
-  --zombie-rot: #4f772d;
-  --ghoul-decay: #6c584c;
-  --demon-fire: #d00000;
-  --fae-glamour: #9d4edd;
-  --revenant-shadow: #264653;
-  --wendigo-frost: #2d3a3a;
-  --scp-red: #d90429;
+  /* Stat colors */
+  --happy-color: #f778ba;
+  --happy-glow: rgba(247, 120, 186, 0.3);
+  --health-color: #3fb950;
+  --health-glow: rgba(63, 185, 80, 0.3);
+  --smart-color: #d29922;
+  --smart-glow: rgba(210, 153, 34, 0.3);
+  --social-color: #a371f7;
+  --social-glow: rgba(163, 113, 247, 0.3);
+  --money-color: #3fb950;
+  --money-glow: rgba(63, 185, 80, 0.25);
+  --karma-color: #f0883e;
   
-  --success-color: #06d6a0;
-  --warning-color: #ffd166;
-  --danger-color: #ef476f;
+  /* Occult colors */
+  --vampire-blood: #da3633;
+  --vampire-glow: rgba(218, 54, 51, 0.3);
+  --werewolf-fury: #db6d28;
+  --werewolf-glow: rgba(219, 109, 40, 0.3);
+  --zombie-rot: #57ab5a;
+  --zombie-glow: rgba(87, 171, 90, 0.3);
+  --ghoul-decay: #768390;
+  --ghoul-glow: rgba(118, 131, 144, 0.3);
+  --demon-fire: #f85149;
+  --demon-glow: rgba(248, 81, 73, 0.3);
+  --fae-glamour: #a371f7;
+  --fae-glow: rgba(163, 113, 247, 0.3);
+  --revenant-shadow: #388bfd;
+  --wendigo-frost: #76e3ea;
+  --scp-red: #f85149;
+  --scp-glow: rgba(248, 81, 73, 0.4);
   
-  --log-bg: #090d14;
-  --border-ui: #2d3748;
+  /* Status colors */
+  --success-color: #3fb950;
+  --success-glow: rgba(63, 185, 80, 0.3);
+  --warning-color: #d29922;
+  --warning-glow: rgba(210, 153, 34, 0.3);
+  --danger-color: #f85149;
+  --danger-glow: rgba(248, 81, 73, 0.3);
   
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  /* UI elements */
+  --log-bg: #010409;
+  --border-ui: rgba(240, 246, 252, 0.1);
+  --border-subtle: rgba(240, 246, 252, 0.05);
   
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.7);
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
   
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow: 0.4s cubic-bezier(0.1, 0.8, 0.3, 1);
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+  
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

@@ -1,65 +1,93 @@
 .wrapper {
   width: 100%;
-  max-width: 900px;
+  max-width: 950px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   min-height: 100vh;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .topBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .mainContent {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 20px;
-  min-height: 400px;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  min-height: 420px;
 }
 
 .viewport {
-  background: var(--log-bg);
+  background: linear-gradient(180deg, var(--log-bg), rgba(1, 4, 9, 0.8));
   border-radius: var(--radius-xl);
-  padding: 20px;
-  border: 1px solid var(--border-ui);
+  padding: 24px;
+  border: 1px solid var(--border-subtle);
   overflow-y: auto;
-  max-height: 450px;
+  max-height: 480px;
+  position: relative;
+}
+
+.viewport::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(180deg, var(--log-bg), transparent);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .controls {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 
 .ageButton {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 @media (max-width: 768px) {
   .wrapper {
-    padding: 12px;
-    gap: 16px;
+    padding: 16px;
+    gap: 18px;
   }
   
   .mainContent {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
   
   .viewport {
-    max-height: 350px;
-    padding: 16px;
+    max-height: 380px;
+    padding: 18px;
+  }
+  
+  .viewport::before {
+    display: none;
   }
   
   .controls {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 12px;
   }
   
   .controls > button:first-child {
@@ -69,12 +97,12 @@
 
 @media (max-width: 480px) {
   .wrapper {
-    padding: 10px;
+    padding: 12px;
   }
   
   .viewport {
-    max-height: 300px;
-    padding: 12px;
+    max-height: 320px;
+    padding: 14px;
     border-radius: var(--radius-lg);
   }
 }
