@@ -344,10 +344,7 @@ export function GameProvider({ children }) {
       }
     }
     
-    if (occult?.healthDecay) {
-      const decay = Math.floor(Math.random() * (occult.healthDecay.max - occult.healthDecay.min + 1)) + occult.healthDecay.min;
-      updates.health = (updates.health ?? player.health) - decay;
-    }
+
     
     if (player.family?.length > 0) {
       updates.family = player.family.map(member => {
