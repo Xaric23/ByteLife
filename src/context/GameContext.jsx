@@ -431,18 +431,20 @@ export function GameProvider({ children }) {
   }, []);
 
   const showEventModal = useCallback((event) => {
-    if (!event || !state.player) return;
-    
-    const player = state.player;
+    const currentPlayer = playerRef.current;
+    if (!event || !currentPlayer) return;
     
     const options = event.options
       .filter(opt => {
-        if (opt.minMoney && player.money < opt.minMoney) return false;
+        if (opt.minMoney && currentPlayer.money < opt.minMoney) return false;
         return true;
       })
       .map(opt => ({
         text: opt.text,
         action: () => {
+          const player = playerRef.current;
+          if (!player) return;
+          
           const result = resolveOutcome(opt);
           const updates = {};
           
@@ -482,7 +484,7 @@ export function GameProvider({ children }) {
         options,
       },
     });
-  }, [state.player, saveGame, processNextEvent]);
+  }, [saveGame, processNextEvent]);
 
   useEffect(() => {
     if (state.pendingEvents.length > 0 && !state.modal) {
