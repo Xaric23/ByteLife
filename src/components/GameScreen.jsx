@@ -7,7 +7,7 @@ import { Button, Modal } from './ui';
 import styles from './GameScreen.module.css';
 
 export default function GameScreen() {
-  const { player, activeTab, ageUp, modal, hideModal, goToMenu, applyAction } = useGame();
+  const { player, activeTab, ageUp, modal, hideModal, goToMenu, applyAction, saveGame } = useGame();
 
   if (!player) return null;
 
