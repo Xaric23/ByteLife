@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { occultTypes, generateSCPDesignation } from '../data/occults';
 import { getRandomName } from '../data/names';
-import { selectRandomEvent, resolveOutcome } from '../data/events';
+import { selectRandomEvent, resolveOutcome, supernaturalEncounters } from '../data/events';
 import { safeUUID, clampPlayerStats, safeLocalStorage } from '../utils/helpers';
 
 const SAVE_KEY_PREFIX = 'bytelife_slot_';
@@ -405,6 +405,36 @@ export function GameProvider({ children }) {
         if (event && !eventsToQueue.find(e => e.id === event.id)) {
           eventsToQueue.push(event);
         }
+      }
+    }
+    
+    // Separate chance for direct supernatural encounter (8% per year for humans age 16+)
+    if (nextPlayer.occult === "Human" && newAge >= 16 && Math.random() < 0.08) {
+      const eligibleEncounters = supernaturalEncounters.filter(e => newAge >= e.minAge);
+      if (eligibleEncounters.length > 0) {
+        const encounter = eligibleEncounters[Math.floor(Math.random() * eligibleEncounters.length)];
+        eventsToQueue.unshift({
+          id: encounter.id,
+          title: encounter.title,
+          description: encounter.description,
+          options: [
+            { 
+              text: "Fight back!", 
+              outcomes: [
+                { weight: 0.3, message: "You fought them off! But you feel... different.", transform: encounter.transform },
+                { weight: 0.4, message: "You barely escaped with your life!", effects: { health: -25 } },
+                { weight: 0.3, message: `The ${encounter.transform} overpowered you. You're changing...`, transform: encounter.transform },
+              ]
+            },
+            { 
+              text: "Try to flee", 
+              outcomes: [
+                { weight: 0.4, message: "You got away! Your heart is still pounding.", effects: { happiness: -10 } },
+                { weight: 0.6, message: "They caught you. The transformation begins...", transform: encounter.transform },
+              ]
+            },
+          ],
+        });
       }
     }
     

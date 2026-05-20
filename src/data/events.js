@@ -497,13 +497,13 @@ export const lifeEvents = {
       minAge: 16, maxAge: 90,
       options: [
         { text: "Investigate", effects: {}, outcomes: [
-          { weight: 0.7, message: "Just stress. Nothing supernatural.", effects: { happiness: -5 } },
+          { weight: 0.5, message: "Just stress. Nothing supernatural.", effects: { happiness: -5 } },
           { weight: 0.2, message: "The dreams stopped as mysteriously as they started.", effects: {} },
-          { weight: 0.1, message: "Something is definitely watching you...", effects: { happiness: -15 }, supernatural: true },
+          { weight: 0.3, message: "Something is definitely watching you...", effects: { happiness: -15 }, supernatural: true },
         ]},
         { text: "Ignore them", effects: {}, outcomes: [
-          { weight: 0.8, message: "They faded over time.", effects: {} },
-          { weight: 0.2, message: "The dreams intensified.", effects: { happiness: -10, health: -5 } },
+          { weight: 0.7, message: "They faded over time.", effects: {} },
+          { weight: 0.3, message: "The dreams intensified.", effects: { happiness: -10, health: -5 } },
         ]},
       ]
     },
@@ -514,14 +514,14 @@ export const lifeEvents = {
       minAge: 21, maxAge: 70,
       options: [
         { text: "Talk to them", effects: {}, outcomes: [
-          { weight: 0.4, message: "Fascinating conversation. They left mysteriously.", effects: { social: 5 } },
-          { weight: 0.3, message: "They offered you 'eternal life'. You declined.", effects: { happiness: 5 } },
+          { weight: 0.3, message: "Fascinating conversation. They left mysteriously.", effects: { social: 5 } },
+          { weight: 0.2, message: "They offered you 'eternal life'. You declined.", effects: { happiness: 5 } },
           { weight: 0.2, message: "Just a weird person. Nothing supernatural.", effects: {} },
-          { weight: 0.1, message: "They bit your neck! You're changing...", effects: {}, transform: "Vampire" },
+          { weight: 0.3, message: "They bit your neck! You're changing...", effects: {}, transform: "Vampire" },
         ]},
         { text: "Avoid them", effects: {}, outcomes: [
-          { weight: 0.9, message: "They watched you leave with an unsettling smile.", effects: {} },
-          { weight: 0.1, message: "They followed you outside...", effects: { happiness: -10 }, supernatural: true },
+          { weight: 0.7, message: "They watched you leave with an unsettling smile.", effects: {} },
+          { weight: 0.3, message: "They followed you outside...", effects: { happiness: -10 }, transform: "Vampire" },
         ]},
       ]
     },
@@ -532,18 +532,177 @@ export const lifeEvents = {
       minAge: 16, maxAge: 60,
       options: [
         { text: "Go hiking", effects: {}, outcomes: [
-          { weight: 0.5, message: "Beautiful night! Great memories.", effects: { happiness: 15, social: 10 } },
-          { weight: 0.25, message: "Got lost briefly. Scary but fine.", effects: { happiness: -5 } },
+          { weight: 0.4, message: "Beautiful night! Great memories.", effects: { happiness: 15, social: 10 } },
+          { weight: 0.2, message: "Got lost briefly. Scary but fine.", effects: { happiness: -5 } },
           { weight: 0.15, message: "Heard howling. Probably just wolves... right?", effects: { happiness: -10 } },
-          { weight: 0.1, message: "Something attacked the group! You were bitten...", effects: { health: -20 }, transform: "Werewolf" },
+          { weight: 0.25, message: "Something attacked the group! You were bitten...", effects: { health: -20 }, transform: "Werewolf" },
         ]},
         { text: "Stay home", effects: {}, outcomes: [
           { weight: 1.0, message: "Quiet night in. Friends said you missed out.", effects: { social: -5 } },
         ]},
       ]
     },
+    {
+      id: "abandoned_building",
+      title: "Abandoned Building",
+      description: "You and friends dare each other to explore an abandoned asylum...",
+      minAge: 16, maxAge: 45,
+      options: [
+        { text: "Go inside", effects: {}, outcomes: [
+          { weight: 0.3, message: "Creepy but empty. Good story to tell.", effects: { social: 5 } },
+          { weight: 0.2, message: "Found some interesting graffiti and old records.", effects: { smarts: 3 } },
+          { weight: 0.2, message: "Something chased you out! You ran for your life.", effects: { happiness: -15, health: -5 } },
+          { weight: 0.3, message: "A ghoulish figure emerged from the darkness and attacked!", effects: { health: -15 }, transform: "Ghoul" },
+        ]},
+        { text: "Stay outside", effects: {}, outcomes: [
+          { weight: 1.0, message: "Your friends called you a coward, but at least you're safe.", effects: { social: -5 } },
+        ]},
+      ]
+    },
+    {
+      id: "blood_craving",
+      title: "Strange Craving",
+      description: "Lately, the sight of blood doesn't disgust you... it fascinates you.",
+      minAge: 18, maxAge: 80,
+      options: [
+        { text: "Embrace it", effects: {}, outcomes: [
+          { weight: 0.4, message: "It passed. Probably just iron deficiency.", effects: {} },
+          { weight: 0.3, message: "You found yourself at a blood bank late at night...", effects: { happiness: -10 } },
+          { weight: 0.3, message: "The transformation completes itself. You crave blood now.", effects: {}, transform: "Vampire" },
+        ]},
+        { text: "Seek help", effects: {}, outcomes: [
+          { weight: 0.6, message: "Doctor says you're fine. Weird.", effects: { money: -500 } },
+          { weight: 0.4, message: "The doctor noticed something strange in your blood work...", effects: { money: -500, happiness: -10 }, supernatural: true },
+        ]},
+      ]
+    },
+    {
+      id: "cemetery_shortcut",
+      title: "Cemetery Shortcut",
+      description: "It's late at night. The cemetery is the fastest way home...",
+      minAge: 16, maxAge: 70,
+      options: [
+        { text: "Walk through", effects: {}, outcomes: [
+          { weight: 0.4, message: "Made it through fine. Spooky atmosphere though.", effects: { happiness: -5 } },
+          { weight: 0.2, message: "Swear you saw something moving between the graves.", effects: { happiness: -10 } },
+          { weight: 0.15, message: "Tripped over a freshly dug grave. Unsettling.", effects: { happiness: -15 } },
+          { weight: 0.25, message: "Something crawled out of a grave and bit you!", effects: { health: -20 }, transform: "Zombie" },
+        ]},
+        { text: "Take the long way", effects: {}, outcomes: [
+          { weight: 1.0, message: "Took longer but you feel better about it.", effects: {} },
+        ]},
+      ]
+    },
+    {
+      id: "occult_shop",
+      title: "Mysterious Shop",
+      description: "A new occult shop opened downtown. Curiosity gets the better of you...",
+      minAge: 18, maxAge: 70,
+      options: [
+        { text: "Browse inside", effects: {}, outcomes: [
+          { weight: 0.3, message: "Mostly fake stuff. Bought a cool necklace though.", effects: { money: -50, happiness: 5 } },
+          { weight: 0.25, message: "The shopkeeper gave you a knowing look. Unsettling.", effects: { happiness: -5 } },
+          { weight: 0.2, message: "Found a genuinely ancient artifact!", effects: { money: -200, smarts: 5 } },
+          { weight: 0.25, message: "Touched a cursed object. You feel... different.", effects: {}, transform: "Fae" },
+        ]},
+        { text: "Keep walking", effects: {}, outcomes: [
+          { weight: 1.0, message: "Probably for the best.", effects: {} },
+        ]},
+      ]
+    },
+    {
+      id: "forest_encounter",
+      title: "Lost in the Woods",
+      description: "A hiking trip went wrong. You're lost as night falls...",
+      minAge: 16, maxAge: 60,
+      options: [
+        { text: "Keep moving", effects: {}, outcomes: [
+          { weight: 0.3, message: "Found your way back to the trail!", effects: { happiness: 10 } },
+          { weight: 0.25, message: "Spent the night in the woods. Terrifying.", effects: { happiness: -20, health: -10 } },
+          { weight: 0.2, message: "Something stalked you all night. You barely escaped.", effects: { happiness: -25, health: -15 } },
+          { weight: 0.25, message: "The hunger took over. You don't remember what happened, but you're different now.", effects: { health: -10 }, transform: "Wendigo" },
+        ]},
+        { text: "Make camp", effects: {}, outcomes: [
+          { weight: 0.5, message: "Rough night but you survived. Found help in the morning.", effects: { happiness: -10 } },
+          { weight: 0.3, message: "Strange dreams all night. Woke up feeling changed.", effects: { happiness: -15 }, supernatural: true },
+          { weight: 0.2, message: "Something visited your camp...", effects: { health: -15 }, transform: "Werewolf" },
+        ]},
+      ]
+    },
+    {
+      id: "seance",
+      title: "Séance Invitation",
+      description: "A friend invites you to a séance. They say it's just for fun...",
+      minAge: 18, maxAge: 60,
+      options: [
+        { text: "Participate", effects: {}, outcomes: [
+          { weight: 0.35, message: "Nothing happened. Good laughs though.", effects: { social: 5, happiness: 5 } },
+          { weight: 0.25, message: "The candles flickered. Probably just wind.", effects: { happiness: -5 } },
+          { weight: 0.15, message: "You felt a cold presence. Everyone freaked out.", effects: { happiness: -15, social: 5 } },
+          { weight: 0.25, message: "Something answered. And it chose you as its vessel.", effects: {}, transform: "Demon" },
+        ]},
+        { text: "Decline", effects: {}, outcomes: [
+          { weight: 1.0, message: "You stayed home. Your friend said nothing happened anyway.", effects: {} },
+        ]},
+      ]
+    },
+    {
+      id: "near_death",
+      title: "Near Death Experience",
+      description: "You almost died in an accident. You saw... something on the other side.",
+      minAge: 16, maxAge: 80,
+      options: [
+        { text: "Accept what you saw", effects: {}, outcomes: [
+          { weight: 0.4, message: "Maybe it was just your brain shutting down. You recovered fine.", effects: { health: -10, happiness: 5 } },
+          { weight: 0.3, message: "You can't forget what you saw. It haunts you.", effects: { health: -10, happiness: -20 } },
+          { weight: 0.3, message: "You came back... but not entirely. Part of you stayed in the darkness.", effects: { health: -15 }, transform: "Revenant" },
+        ]},
+        { text: "Deny it happened", effects: {}, outcomes: [
+          { weight: 0.7, message: "Pushed it out of your mind. Life goes on.", effects: { health: -10 } },
+          { weight: 0.3, message: "You can't escape what you experienced.", effects: { health: -10, happiness: -15 }, supernatural: true },
+        ]},
+      ]
+    },
   ],
 };
+
+export const supernaturalEncounters = [
+  {
+    id: "vampire_attack",
+    title: "Night Attack",
+    description: "Walking home late at night, a figure moves impossibly fast toward you...",
+    transform: "Vampire",
+    minAge: 16,
+  },
+  {
+    id: "werewolf_attack",
+    title: "Beast Attack",
+    description: "A massive wolf-like creature lunges from the shadows!",
+    transform: "Werewolf",
+    minAge: 16,
+  },
+  {
+    id: "zombie_bite",
+    title: "Infected Bite",
+    description: "A shambling figure grabs you and sinks its teeth into your flesh!",
+    transform: "Zombie",
+    minAge: 16,
+  },
+  {
+    id: "demon_possession",
+    title: "Possession",
+    description: "You feel something dark and ancient trying to take control of your body...",
+    transform: "Demon",
+    minAge: 21,
+  },
+  {
+    id: "fae_touched",
+    title: "Fairy Circle",
+    description: "You accidentally stepped into a ring of mushrooms. The world shifts around you...",
+    transform: "Fae",
+    minAge: 16,
+  },
+];
 
 export const getEligibleEvents = (player) => {
   const eligible = [];
