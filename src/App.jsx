@@ -2,6 +2,7 @@ import { GameProvider, useGame } from './context/GameContext';
 import MainMenu from './components/MainMenu';
 import GameScreen from './components/GameScreen';
 import DeathScreen from './components/DeathScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 import './styles/global.css';
 
 function GameRouter() {
@@ -21,9 +22,11 @@ function GameRouter() {
 
 function App() {
   return (
-    <GameProvider>
-      <GameRouter />
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <GameRouter />
+      </GameProvider>
+    </ErrorBoundary>
   );
 }
 
