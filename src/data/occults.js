@@ -217,6 +217,28 @@ export const occultTypes = {
     weaknesses: ["Genetic instability", "Multiple vulnerabilities", "SCP priority target"],
     transformMethods: ["Born of two different occult parents"],
   },
+
+  Alien: {
+    id: "Alien",
+    name: "Alien",
+    description: "Extraterrestrial being or human modified by alien technology",
+    meterName: "Cosmic Energy",
+    meterIcon: "👽",
+    meterColor: "#00ff88",
+    meterDecay: 8,
+    healthDecay: { min: 0, max: 0 },
+    canAge: false,
+    canDieOfAge: false,
+    scpRisk: 0.20,
+    abilities: [
+      { id: "telepathy", name: "Telepathic Probe", description: "Read and influence mortal minds", meterRestore: 30, smartsBonus: 5, risk: 0.05 },
+      { id: "abduct", name: "Conduct Abduction", description: "Abduct humans for experimentation", meterRestore: 45, risk: 0.15, scpRisk: 0.20 },
+      { id: "tech_harvest", name: "Harvest Technology", description: "Steal advanced tech from facilities", meterRestore: 35, moneyGain: 25000, risk: 0.20 },
+      { id: "beacon", name: "Contact Mothership", description: "Recharge via orbital energy beam", meterRestore: 60, risk: 0.08, scpRisk: 0.12 },
+    ],
+    weaknesses: ["Earth pathogens", "Electromagnetic interference", "Government black sites"],
+    transformMethods: ["Alien abduction experimentation", "Implant integration", "Genetic hybridization"],
+  },
 };
 
 export const scpDesignations = {
@@ -292,6 +314,14 @@ export const supernaturalEvents = [
     resultOccult: "Wendigo",
     minAge: 21,
     weight: 0.3,
+  },
+  {
+    id: "alien_abduction",
+    name: "Alien Abduction",
+    description: "A blinding light descends from the sky. You wake up... different.",
+    resultOccult: "Alien",
+    minAge: 16,
+    weight: 0.8,
   },
 ];
 
