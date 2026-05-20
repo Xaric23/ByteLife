@@ -5,7 +5,7 @@ import { safeUUID, safeParseName } from '../../utils/helpers';
 import styles from './Panel.module.css';
 
 export default function RelationsPanel() {
-  const { player, applyAction, addLog, showModal } = useGame();
+  const { player, applyAction, addLog, showModal, hideModal } = useGame();
 
   if (!player) return null;
 
@@ -127,9 +127,10 @@ export default function RelationsPanel() {
               `Started dating ${partnerName}!`,
               'Dating'
             );
+            hideModal();
           },
         },
-        { text: 'Pass', action: () => {} },
+        { text: 'Pass', action: () => hideModal() },
       ],
     });
   };

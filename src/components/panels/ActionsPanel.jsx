@@ -4,7 +4,7 @@ import { Button } from '../ui';
 import styles from './Panel.module.css';
 
 export default function ActionsPanel() {
-  const { player, applyAction, addLog, showModal, saveGame } = useGame();
+  const { player, applyAction, addLog, showModal, hideModal } = useGame();
 
   if (!player) return null;
 
@@ -143,10 +143,11 @@ export default function ActionsPanel() {
                 'Medical'
               );
             }
+            hideModal();
           },
           disabled: player.money < 75000,
         },
-        { text: 'Too risky', action: () => {} },
+        { text: 'Too risky', action: () => hideModal() },
       ],
     });
   };
