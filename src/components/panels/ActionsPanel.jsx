@@ -1,5 +1,6 @@
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../hooks/useGame';
 import { occultTypes, generateSCPDesignation } from '../../data/occults';
+import { rollChance } from '../../utils/helpers';
 import { Button } from '../ui';
 import styles from './Panel.module.css';
 
@@ -12,8 +13,8 @@ export default function ActionsPanel() {
   const isOccult = player.occult !== "Human";
 
   const doActivity = (activity) => {
-    let updates = {};
-    let message = '';
+    let updates;
+    let message;
 
     switch (activity) {
       case 'gym':
@@ -103,10 +104,10 @@ export default function ActionsPanel() {
 
     let message = `${ability.name} successful.`;
     
-    if (ability.risk && Math.random() < ability.risk) {
+    if (ability.risk && rollChance(ability.risk)) {
       message = `${ability.name} went wrong! Attracted unwanted attention.`;
       
-      if (ability.scpRisk && Math.random() < ability.scpRisk) {
+      if (ability.scpRisk && rollChance(ability.scpRisk)) {
         updates.scpContained = true;
         updates.scpDesignation = generateSCPDesignation(player.occult);
         updates.job = null;

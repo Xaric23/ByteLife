@@ -66,14 +66,14 @@ npm run build
 ```
 
 ## Tech Stack
-- React 18
+- React 19
 - Vite
 - CSS Modules
 - LocalStorage for persistence
 
 ## Project Structure
 
-```
+```text
 src/
 ├── components/
 │   ├── ui/          # Reusable UI components

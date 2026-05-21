@@ -1,4 +1,4 @@
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../hooks/useGame';
 import { educationLevels } from '../../data/careers';
 import { Button } from '../ui';
 import styles from './Panel.module.css';

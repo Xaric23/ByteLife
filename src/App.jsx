@@ -1,4 +1,5 @@
-import { GameProvider, useGame } from './context/GameContext';
+import { GameProvider } from './context/GameContext';
+import { useGame } from './hooks/useGame';
 import MainMenu from './components/MainMenu';
 import GameScreen from './components/GameScreen';
 import DeathScreen from './components/DeathScreen';

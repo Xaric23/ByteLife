@@ -1,4 +1,4 @@
-import { useGame } from '../context/GameContext';
+import { useGame } from '../hooks/useGame';
 import GameHeader from './GameHeader';
 import StatsHUD from './StatsHUD';
 import Navigation from './Navigation';

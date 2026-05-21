@@ -1,5 +1,4 @@
-import { useGame } from '../context/GameContext';
-import { occultTypes } from '../data/occults';
+import { useGame } from '../hooks/useGame';
 import styles from './GameHeader.module.css';
 
 export default function GameHeader() {
@@ -7,7 +6,6 @@ export default function GameHeader() {
   
   if (!player) return null;
 
-  const occult = occultTypes[player.occult];
   const isContained = player.scpContained;
   
   let bodyLabel = player.anatomy === 'Both' ? 'Intersex' : player.anatomy;

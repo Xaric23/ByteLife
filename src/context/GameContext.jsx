@@ -1,8 +1,9 @@
-import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import { useReducer, useEffect, useCallback, useRef } from 'react';
 import { occultTypes, generateSCPDesignation } from '../data/occults';
 import { getRandomName } from '../data/names';
 import { selectRandomEvent, resolveOutcome, supernaturalEncounters } from '../data/events';
 import { safeUUID, clampPlayerStats, safeLocalStorage } from '../utils/helpers';
+import { GameContext } from './GameContextCore';
 
 const SAVE_KEY_PREFIX = 'bytelife_slot_';
 const SLOTS_INDEX_KEY = 'bytelife_slots_index';
@@ -164,8 +165,6 @@ function gameReducer(state, action) {
       return state;
   }
 }
-
-const GameContext = createContext(null);
 
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
@@ -381,16 +380,18 @@ export function GameProvider({ children }) {
     const newAge = nextPlayer.age;
     
     if (newHealth <= 0) {
+      const deadPlayer = { ...nextPlayer, alive: false };
       dispatch({ type: 'DEATH' });
-      saveGame(nextPlayer);
+      saveGame(deadPlayer);
       return;
     }
     
     if (occult?.canDieOfAge && newAge > 80) {
       const deathChance = (newAge - 80) * 0.05;
       if (Math.random() < deathChance) {
+        const deadPlayer = { ...nextPlayer, alive: false };
         dispatch({ type: 'DEATH' });
-        saveGame(nextPlayer);
+        saveGame(deadPlayer);
         return;
       }
     }
@@ -574,12 +575,4 @@ export function GameProvider({ children }) {
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
-}
-
-export function useGame() {
-  const context = useContext(GameContext);
-  if (!context) {
-    throw new Error('useGame must be used within a GameProvider');
-  }
-  return context;
 }

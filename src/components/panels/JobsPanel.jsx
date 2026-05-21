@@ -1,5 +1,6 @@
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../hooks/useGame';
 import { careerPaths, getAvailableCareers } from '../../data/careers';
+import { rollChance } from '../../utils/helpers';
 import { Button } from '../ui';
 import styles from './Panel.module.css';
 
@@ -14,7 +15,7 @@ export default function JobsPanel() {
     const baseChance = 0.5 + (player.smarts - career.reqSmarts) * 0.01;
     const chance = Math.min(0.95, Math.max(0.2, baseChance));
     
-    if (Math.random() < chance) {
+    if (rollChance(chance)) {
       applyAction(
         { job: career },
         `Got hired as a ${career.title}!`,
