@@ -6,6 +6,10 @@ export const safeUUID = () =>
 export const clamp = (value, min = 0, max = 100) => 
   Math.max(min, Math.min(max, value));
 
+export const rollChance = (chance) => Math.random() < chance;
+
+export const randomBetween = (min, max) => min + Math.random() * (max - min);
+
 export const clampPlayerStats = (player) => {
   if (!player) return player;
   

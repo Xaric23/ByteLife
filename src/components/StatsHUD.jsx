@@ -1,4 +1,4 @@
-import { useGame } from '../context/GameContext';
+import { useGame } from '../hooks/useGame';
 import { occultTypes } from '../data/occults';
 import { StatBar } from './ui';
 import styles from './StatsHUD.module.css';

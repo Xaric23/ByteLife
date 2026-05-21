@@ -1,4 +1,4 @@
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../hooks/useGame';
 import { getRandomName, getRandomFirstName } from '../../data/names';
 import { Button } from '../ui';
 import { safeUUID, safeParseName } from '../../utils/helpers';

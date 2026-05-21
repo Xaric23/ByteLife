@@ -1,5 +1,6 @@
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../hooks/useGame';
 import { realEstate, stocks, crypto, vehicles } from '../../data/assets';
+import { randomBetween } from '../../utils/helpers';
 import { Button } from '../ui';
 import styles from './Panel.module.css';
 
@@ -79,7 +80,7 @@ export default function MarketPanel() {
     const property = player.properties?.[index];
     if (!property) return;
     
-    const salePrice = Math.floor(property.price * (0.8 + Math.random() * 0.4));
+    const salePrice = Math.floor(property.price * randomBetween(0.8, 1.2));
     const newProperties = player.properties.filter((_, i) => i !== index);
     
     applyAction(
