@@ -10,6 +10,9 @@ export const rollChance = (chance) => Math.random() < chance;
 
 export const randomBetween = (min, max) => min + Math.random() * (max - min);
 
+export const randomItem = (items) =>
+  items.length > 0 ? items[Math.floor(Math.random() * items.length)] : null;
+
 export const clampPlayerStats = (player) => {
   if (!player) return player;
   

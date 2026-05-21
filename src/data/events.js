@@ -487,6 +487,58 @@ export const lifeEvents = {
         ]},
       ]
     },
+    {
+      id: "rival_blackmail",
+      title: "Proof in the Wrong Hands",
+      description: "Someone claims they can prove one of your secrets.",
+      minAge: 16, maxAge: 90,
+      requiresSecret: true,
+      options: [
+        { text: "Pay them off", minMoney: 3000, effects: { money: -3000, happiness: -6 }, outcomes: [
+          { weight: 0.7, message: "The evidence disappeared. For now.", effects: {} },
+          { weight: 0.3, message: "They took the money and kept a copy.", effects: { happiness: -12 } },
+        ]},
+        { text: "Call their bluff", effects: {}, outcomes: [
+          { weight: 0.45, message: "They had nothing. Nice read.", effects: { happiness: 8, social: 3 } },
+          { weight: 0.35, message: "They leaked enough to make people suspicious.", effects: { happiness: -12 }, secret: "occult_identity" },
+          { weight: 0.2, message: "The leak reached dangerous circles.", effects: { happiness: -18, factions: { foundation: 10, hunterOrder: 8 } } },
+        ]},
+      ]
+    },
+    {
+      id: "estate_sale_relic",
+      title: "Estate Sale Relic",
+      description: "A dusty box at an estate sale vibrates when you touch it.",
+      minAge: 18, maxAge: 90,
+      options: [
+        { text: "Buy it", minMoney: 1200, effects: { money: -1200, artifact: "scrying_mirror" }, outcomes: [
+          { weight: 0.65, message: "The relic is real. It shows impossible reflections.", effects: { smarts: 4 } },
+          { weight: 0.25, message: "It is real, and someone else wanted it too.", effects: { happiness: -8, factions: { serpentHand: 5, foundation: -4 } } },
+          { weight: 0.1, message: "The box was empty by morning, but your dreams changed.", effects: { happiness: -8 }, transform: "Psychic" },
+        ]},
+        { text: "Walk away", effects: {}, outcomes: [
+          { weight: 0.7, message: "Probably just a weird antique.", effects: {} },
+          { weight: 0.3, message: "You still hear it humming in your sleep.", effects: { happiness: -5 } },
+        ]},
+      ]
+    },
+    {
+      id: "faction_offer",
+      title: "A Quiet Offer",
+      description: "A faction sends a polite, unsigned invitation to meet.",
+      minAge: 18, maxAge: 90,
+      options: [
+        { text: "Meet them", effects: {}, outcomes: [
+          { weight: 0.3, message: "Foundation contacts offered a consultant file.", effects: { money: 5000, factions: { foundation: 12, serpentHand: -8 } } },
+          { weight: 0.3, message: "Occult liberators gave you a safehouse number.", effects: { social: 5, factions: { serpentHand: 12, foundation: -8 } } },
+          { weight: 0.25, message: "The Night Court appreciated your manners.", effects: { happiness: 6, factions: { nightCourt: 12 } } },
+          { weight: 0.15, message: "Hunters tested you and left unconvinced.", effects: { health: -5, factions: { hunterOrder: 8 } } },
+        ]},
+        { text: "Ignore it", effects: {}, outcomes: [
+          { weight: 1.0, message: "The envelope vanished from your desk by morning.", effects: { happiness: -3 } },
+        ]},
+      ]
+    },
   ],
 
   occult_human: [
@@ -736,6 +788,40 @@ export const lifeEvents = {
         ]},
       ]
     },
+    {
+      id: "coven_grimoire",
+      title: "Book That Knows Your Name",
+      description: "A book opens to a page written in your handwriting, though you have never seen it before.",
+      minAge: 16, maxAge: 80,
+      options: [
+        { text: "Read the page aloud", effects: {}, outcomes: [
+          { weight: 0.45, message: "The words burn themselves into your memory.", effects: { smarts: 8 }, transform: "Witch" },
+          { weight: 0.35, message: "The page goes blank. You feel watched.", effects: { happiness: -8, secret: "forbidden_artifact" } },
+          { weight: 0.2, message: "A coven heard you from very far away.", effects: { social: 5, factions: { serpentHand: 8, hunterOrder: -5 } } },
+        ]},
+        { text: "Shut the book", effects: {}, outcomes: [
+          { weight: 0.8, message: "The book stays shut. Mostly.", effects: { happiness: -4 } },
+          { weight: 0.2, message: "Ink leaks through the cover and stains your hands.", effects: { happiness: -8 }, transform: "Witch" },
+        ]},
+      ]
+    },
+    {
+      id: "thought_broadcast",
+      title: "Thought Broadcast",
+      description: "For one terrible minute, every stranger's fear arrives inside your skull.",
+      minAge: 12, maxAge: 80,
+      options: [
+        { text: "Focus on one voice", effects: {}, outcomes: [
+          { weight: 0.45, message: "The voice becomes a signal. You understand too much now.", effects: { smarts: 6, happiness: -8 }, transform: "Psychic" },
+          { weight: 0.35, message: "You helped someone avoid a disaster they never saw coming.", effects: { happiness: 10, social: 8 } },
+          { weight: 0.2, message: "The signal looked back.", effects: { happiness: -15, factions: { foundation: 8 } } },
+        ]},
+        { text: "Block it out", effects: {}, outcomes: [
+          { weight: 0.7, message: "The static faded, leaving a headache.", effects: { health: -5 } },
+          { weight: 0.3, message: "You cannot fully close the door again.", effects: { happiness: -8 }, transform: "Psychic" },
+        ]},
+      ]
+    },
   ],
 };
 
@@ -782,6 +868,27 @@ export const supernaturalEncounters = [
     transform: "Alien",
     minAge: 16,
   },
+  {
+    id: "witch_coven",
+    title: "Coven Invitation",
+    description: "A stranger presses a black envelope into your hand. Inside: your name, written in ash.",
+    transform: "Witch",
+    minAge: 16,
+  },
+  {
+    id: "psychic_static",
+    title: "Psychic Static",
+    description: "You hear a crowd of thoughts that no one has spoken aloud.",
+    transform: "Psychic",
+    minAge: 12,
+  },
+  {
+    id: "ghost_crossing",
+    title: "The Wrong Side",
+    description: "For one breath, you see your own body from above.",
+    transform: "Ghost",
+    minAge: 16,
+  },
 ];
 
 export const getEligibleEvents = (player) => {
@@ -797,6 +904,8 @@ export const getEligibleEvents = (player) => {
       if (age < event.minAge || age > event.maxAge) continue;
       if (event.requiresJob && !player.job) continue;
       if (event.requiresChildren && (!player.children || player.children.length === 0)) continue;
+      if (event.requiresSecret && (!player.secrets || player.secrets.length === 0)) continue;
+      if (event.requiresRival && (!player.rivals || player.rivals.length === 0)) continue;
       eligible.push({ ...event, category });
     }
   }
@@ -826,6 +935,9 @@ export const resolveOutcome = (option) => {
         effects: { ...(option.effects || {}), ...(outcome.effects || {}) },
         transform: outcome.transform,
         supernatural: outcome.supernatural,
+        artifact: outcome.artifact,
+        secret: outcome.secret,
+        factions: outcome.factions,
       };
     }
   }
@@ -836,5 +948,8 @@ export const resolveOutcome = (option) => {
     effects: { ...(option.effects || {}), ...(last.effects || {}) },
     transform: last.transform,
     supernatural: last.supernatural,
+    artifact: last.artifact,
+    secret: last.secret,
+    factions: last.factions,
   };
 };

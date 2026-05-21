@@ -2,12 +2,53 @@ import { useReducer, useEffect, useCallback, useRef } from 'react';
 import { occultTypes, generateSCPDesignation } from '../data/occults';
 import { getRandomName } from '../data/names';
 import { selectRandomEvent, resolveOutcome, supernaturalEncounters } from '../data/events';
-import { safeUUID, clampPlayerStats, safeLocalStorage } from '../utils/helpers';
+import { artifactTemplates, createInitialFactions, rivalTemplates, secretTemplates } from '../data/storySystems';
+import { safeUUID, clampPlayerStats, safeLocalStorage, randomItem } from '../utils/helpers';
 import { GameContext } from './GameContextCore';
 
 const SAVE_KEY_PREFIX = 'bytelife_slot_';
 const SLOTS_INDEX_KEY = 'bytelife_slots_index';
 const CURRENT_SLOT_KEY = 'bytelife_current_slot';
+
+const createRival = (player) => {
+  const eligible = rivalTemplates.filter((rival) => {
+    if (player.age < rival.minAge || player.age > rival.maxAge) return false;
+    if (rival.requiresOccult && player.occult === 'Human') return false;
+    return true;
+  });
+  const template = randomItem(eligible);
+  if (!template) return null;
+
+  return {
+    id: safeUUID(),
+    name: getRandomName(Math.random() > 0.5 ? 'Male' : 'Female'),
+    type: template.type,
+    hostility: template.hostility,
+    history: [`Became your ${template.type.toLowerCase()}.`],
+    exposedSecretId: null,
+  };
+};
+
+const normalizePlayer = (player) => {
+  if (!player) return player;
+
+  const normalized = {
+    ...player,
+    rivals: player.rivals || [],
+    secrets: player.secrets || [],
+    artifacts: player.artifacts || [],
+    factions: { ...createInitialFactions(), ...(player.factions || {}) },
+    reputation: player.reputation || 'Unknown',
+  };
+
+  return clampPlayerStats(normalized);
+};
+
+const getMissingAutomaticSecrets = (player) =>
+  secretTemplates
+    .filter((secret) => secret.condition(player))
+    .filter((secret) => !(player.secrets || []).some((owned) => owned.id === secret.id))
+    .map((secret) => ({ ...secret, discoveredAt: player.age, exposed: false }));
 
 const createInitialPlayer = (anatomy = "Male", orientation = "Straight") => ({
   name: getRandomName(anatomy === "Both" ? (Math.random() > 0.5 ? "Male" : "Female") : anatomy),
@@ -47,6 +88,11 @@ const createInitialPlayer = (anatomy = "Male", orientation = "Straight") => ({
   criminalRecord: [],
   achievements: [],
   yearsPlayed: 0,
+  rivals: [],
+  secrets: [],
+  artifacts: [],
+  factions: createInitialFactions(),
+  reputation: "Unknown",
 });
 
 const initialState = {
@@ -77,7 +123,7 @@ function gameReducer(state, action) {
     case 'LOAD_GAME':
       return {
         ...state,
-        player: action.player,
+        player: normalizePlayer(action.player),
         currentSlot: action.slot,
         gamePhase: 'playing',
       };
@@ -86,14 +132,14 @@ function gameReducer(state, action) {
       const merged = { ...state.player, ...action.updates };
       return {
         ...state,
-        player: clampPlayerStats(merged),
+        player: normalizePlayer(merged),
       };
     }
     
     case 'SET_PLAYER':
       return {
         ...state,
-        player: clampPlayerStats(action.player),
+        player: normalizePlayer(action.player),
       };
     
     case 'ADD_LOG':
@@ -135,7 +181,7 @@ function gameReducer(state, action) {
     case 'SUCCESSION':
       return {
         ...state,
-        player: clampPlayerStats(action.newPlayer),
+        player: normalizePlayer(action.newPlayer),
         gamePhase: 'playing',
       };
     
@@ -265,10 +311,73 @@ export function GameProvider({ children }) {
     dispatch({ type: 'UPDATE_PLAYER', updates });
   }, []);
 
+  const addSecret = useCallback((secretId) => {
+    const player = playerRef.current;
+    const secret = secretTemplates.find(s => s.id === secretId);
+    if (!player || !secret || player.secrets?.some(s => s.id === secretId)) return false;
+
+    const nextPlayer = normalizePlayer({
+      ...player,
+      secrets: [...(player.secrets || []), { ...secret, discoveredAt: player.age, exposed: false }],
+    });
+    dispatch({ type: 'SET_PLAYER', player: nextPlayer });
+    dispatch({ type: 'ADD_LOG', message: `New secret: ${secret.title}.`, actionName: 'Secret' });
+    saveGame(nextPlayer);
+    return true;
+  }, [saveGame]);
+
+  const addArtifact = useCallback((artifactId = null, extraUpdates = {}) => {
+    const player = playerRef.current;
+    if (!player) return false;
+
+    const available = artifactTemplates.filter(
+      artifact => artifact.id === artifactId || (!artifactId && !player.artifacts?.some(a => a.id === artifact.id))
+    );
+    const artifact = randomItem(available);
+    if (!artifact) return false;
+
+    const nextFactions = { ...(player.factions || createInitialFactions()) };
+    Object.entries(artifact.factionEffects || {}).forEach(([id, amount]) => {
+      nextFactions[id] = Math.max(-100, Math.min(100, (nextFactions[id] || 0) + amount));
+    });
+
+    const nextPlayer = normalizePlayer({
+      ...player,
+      artifacts: [...(player.artifacts || []), { ...artifact, foundAt: player.age }],
+      factions: nextFactions,
+      happiness: player.happiness + (artifact.effects?.happiness || 0),
+      health: player.health + (artifact.effects?.health || 0),
+      smarts: player.smarts + (artifact.effects?.smarts || 0),
+      social: player.social + (artifact.effects?.social || 0),
+      occultMeter: player.occultMeter + (artifact.effects?.occultMeter || 0),
+      karma: (player.karma || 50) + (artifact.effects?.karma || 0),
+      money: player.money + (artifact.effects?.money || 0),
+      ...extraUpdates,
+    });
+
+    dispatch({ type: 'SET_PLAYER', player: nextPlayer });
+    dispatch({ type: 'ADD_LOG', message: `Found artifact: ${artifact.name}.`, actionName: 'Artifact' });
+    saveGame(nextPlayer);
+    return true;
+  }, [saveGame]);
+
+  const updateFaction = useCallback((factionId, amount, message = null) => {
+    const player = playerRef.current;
+    if (!player) return false;
+    const factions = { ...createInitialFactions(), ...(player.factions || {}) };
+    factions[factionId] = Math.max(-100, Math.min(100, (factions[factionId] || 0) + amount));
+    const nextPlayer = normalizePlayer({ ...player, factions });
+
+    dispatch({ type: 'SET_PLAYER', player: nextPlayer });
+    if (message) dispatch({ type: 'ADD_LOG', message, actionName: 'Faction' });
+    saveGame(nextPlayer);
+    return true;
+  }, [saveGame]);
+
   const applyAction = useCallback((updates, logMessage, logCategory = 'Action') => {
     if (!state.player) return;
     
-    const nextPlayer = clampPlayerStats({ ...state.player, ...updates });
+    const nextPlayer = normalizePlayer({ ...state.player, ...updates });
     dispatch({ type: 'SET_PLAYER', player: nextPlayer });
     
     if (logMessage) {
@@ -369,8 +478,49 @@ export function GameProvider({ children }) {
         return newChild;
       });
     }
+
+    const automaticSecrets = getMissingAutomaticSecrets({ ...player, ...updates });
+    if (automaticSecrets.length > 0) {
+      updates.secrets = [...(player.secrets || []), ...automaticSecrets];
+      automaticSecrets.forEach(secret => {
+        logs.push({ msg: `New secret: ${secret.title}.`, cat: 'Secret' });
+      });
+    }
+
+    if (updates.age >= 8 && (player.rivals || []).length < 3 && Math.random() < 0.08) {
+      const rival = createRival({ ...player, ...updates });
+      if (rival) {
+        updates.rivals = [...(player.rivals || []), rival];
+        logs.push({ msg: `${rival.name} became your ${rival.type.toLowerCase()}.`, cat: 'Rival' });
+      }
+    }
+
+    if ((player.secrets || []).some(secret => !secret.exposed) && Math.random() < 0.06) {
+      const secret = randomItem((player.secrets || []).filter(item => !item.exposed));
+      const rival = randomItem(player.rivals || []);
+      const secrets = (updates.secrets || player.secrets).map(item =>
+        item.id === secret.id ? { ...item, exposed: true } : item
+      );
+      updates.secrets = secrets;
+      updates.reputation = secret.heat >= 50 ? 'Infamous' : 'Suspicious';
+      updates.happiness = (updates.happiness ?? player.happiness) - 12;
+      if (secret.id === 'occult_identity') {
+        updates.factions = {
+          ...createInitialFactions(),
+          ...(player.factions || {}),
+          foundation: Math.min(100, ((player.factions || {}).foundation || 0) + 12),
+          hunterOrder: Math.min(100, ((player.factions || {}).hunterOrder || 0) + 10),
+        };
+      }
+      logs.push({
+        msg: rival
+          ? `${rival.name} exposed your secret: ${secret.title}.`
+          : `Your secret got exposed: ${secret.title}.`,
+        cat: 'Secret',
+      });
+    }
     
-    const nextPlayer = clampPlayerStats({ ...player, ...updates });
+    const nextPlayer = normalizePlayer({ ...player, ...updates });
     dispatch({ type: 'SET_PLAYER', player: nextPlayer });
     
     logs.forEach(l => dispatch({ type: 'ADD_LOG', message: l.msg, actionName: l.cat }));
@@ -482,6 +632,22 @@ export function GameProvider({ children }) {
                 updates.money = (player.money || 0) + value;
               } else if (['happiness', 'health', 'smarts', 'social', 'karma'].includes(key)) {
                 updates[key] = (player[key] || 50) + value;
+              } else if (key === 'artifact') {
+                const artifact = artifactTemplates.find(item => item.id === value);
+                if (artifact && !player.artifacts?.some(item => item.id === artifact.id)) {
+                  updates.artifacts = [...(player.artifacts || []), { ...artifact, foundAt: player.age }];
+                }
+              } else if (key === 'secret') {
+                const secret = secretTemplates.find(item => item.id === value);
+                if (secret && !player.secrets?.some(item => item.id === secret.id)) {
+                  updates.secrets = [...(player.secrets || []), { ...secret, discoveredAt: player.age, exposed: false }];
+                }
+              } else if (key === 'factions') {
+                const nextFactions = { ...createInitialFactions(), ...(player.factions || {}) };
+                Object.entries(value).forEach(([id, amount]) => {
+                  nextFactions[id] = Math.max(-100, Math.min(100, (nextFactions[id] || 0) + amount));
+                });
+                updates.factions = nextFactions;
               }
             });
           }
@@ -489,6 +655,28 @@ export function GameProvider({ children }) {
           if (result.transform) {
             updates.occult = result.transform;
             updates.occultMeter = 70;
+          }
+
+          if (result.artifact) {
+            const artifact = artifactTemplates.find(item => item.id === result.artifact);
+            if (artifact && !player.artifacts?.some(item => item.id === artifact.id)) {
+              updates.artifacts = [...(updates.artifacts || player.artifacts || []), { ...artifact, foundAt: player.age }];
+            }
+          }
+
+          if (result.secret) {
+            const secret = secretTemplates.find(item => item.id === result.secret);
+            if (secret && !player.secrets?.some(item => item.id === secret.id)) {
+              updates.secrets = [...(updates.secrets || player.secrets || []), { ...secret, discoveredAt: player.age, exposed: false }];
+            }
+          }
+
+          if (result.factions) {
+            const nextFactions = { ...createInitialFactions(), ...(updates.factions || player.factions || {}) };
+            Object.entries(result.factions).forEach(([id, amount]) => {
+              nextFactions[id] = Math.max(-100, Math.min(100, (nextFactions[id] || 0) + amount));
+            });
+            updates.factions = nextFactions;
           }
           
           const nextPlayer = clampPlayerStats({ ...player, ...updates });
@@ -566,6 +754,9 @@ export function GameProvider({ children }) {
     addLog,
     updatePlayer,
     applyAction,
+    addSecret,
+    addArtifact,
+    updateFaction,
     ageUp,
     showModal,
     hideModal,

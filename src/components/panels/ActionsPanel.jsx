@@ -1,11 +1,12 @@
 import { useGame } from '../../hooks/useGame';
 import { occultTypes, generateSCPDesignation } from '../../data/occults';
+import { factionTemplates } from '../../data/storySystems';
 import { rollChance } from '../../utils/helpers';
 import { Button } from '../ui';
 import styles from './Panel.module.css';
 
 export default function ActionsPanel() {
-  const { player, applyAction, addLog, showModal, hideModal } = useGame();
+  const { player, applyAction, addLog, showModal, hideModal, addArtifact, updateFaction } = useGame();
 
   if (!player) return null;
 
@@ -131,7 +132,7 @@ export default function ActionsPanel() {
               return;
             }
             
-            if (Math.random() < 0.6) {
+            if (rollChance(0.6)) {
               applyAction(
                 { money: player.money - 75000, occult: "Human", occultMeter: 50 },
                 'The cure worked! You are human again.',
@@ -182,6 +183,32 @@ export default function ActionsPanel() {
     URL.revokeObjectURL(url);
     
     addLog('Exported life archive to file.', 'System');
+  };
+
+  const searchForArtifact = () => {
+    if (player.money < 1500) {
+      addLog("Can't afford to chase occult leads right now.", 'Artifact');
+      return;
+    }
+
+    if (rollChance(0.45) && addArtifact(null, { money: player.money - 1500, smarts: player.smarts + 1 })) {
+      return;
+    }
+
+    applyAction(
+      { money: player.money - 1500, smarts: player.smarts + 1 },
+      'Followed rumors through estate sales, forums, and locked basements. No real artifact surfaced this time.',
+      'Artifact'
+    );
+    if ((player.artifacts || []).length >= 5) {
+      addLog('No real artifact surfaced this time.', 'Artifact');
+    }
+  };
+
+  const supportFaction = (factionId) => {
+    const faction = factionTemplates[factionId];
+    if (!faction) return;
+    updateFaction(factionId, 8, `You helped ${faction.name}. They will remember it.`);
   };
 
   return (
@@ -288,6 +315,49 @@ export default function ActionsPanel() {
           </div>
         </>
       )}
+
+      <h3 className={styles.sectionTitle}>Artifacts</h3>
+
+      <div className={styles.listRow}>
+        <div className={styles.listInfo}>
+          <strong>Curio Hunt</strong>
+          <small>Spend $1,500 following leads for strange relics</small>
+        </div>
+        <Button size="small" onClick={searchForArtifact} disabled={player.money < 1500}>
+          Search
+        </Button>
+      </div>
+
+      {player.artifacts?.length > 0 ? (
+        player.artifacts.map(artifact => (
+          <div key={artifact.id} className={styles.listRow}>
+            <div className={styles.listInfo}>
+              <strong>{artifact.name}</strong>
+              <small>
+                {artifact.rarity} â€¢ Found at age {artifact.foundAt} â€¢ {artifact.description}
+              </small>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className={styles.empty}>No artifacts discovered.</div>
+      )}
+
+      <h3 className={styles.sectionTitle}>Factions</h3>
+
+      {Object.values(factionTemplates).map(faction => (
+        <div key={faction.id} className={styles.listRow}>
+          <div className={styles.listInfo}>
+            <strong>{faction.name}</strong>
+            <small>
+              Standing: {(player.factions || {})[faction.id] || 0} â€¢ {faction.description}
+            </small>
+          </div>
+          <Button size="small" onClick={() => supportFaction(faction.id)}>
+            Help
+          </Button>
+        </div>
+      ))}
 
       <h3 className={styles.sectionTitle}>System</h3>
       
