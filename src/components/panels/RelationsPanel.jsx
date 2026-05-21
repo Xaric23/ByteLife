@@ -1,7 +1,7 @@
 import { useGame } from '../../hooks/useGame';
 import { getRandomName, getRandomFirstName } from '../../data/names';
 import { Button } from '../ui';
-import { safeUUID, safeParseName } from '../../utils/helpers';
+import { safeUUID, safeParseName, rollChance } from '../../utils/helpers';
 import styles from './Panel.module.css';
 
 export default function RelationsPanel() {
@@ -135,6 +135,54 @@ export default function RelationsPanel() {
     });
   };
 
+  const confrontRival = (index) => {
+    const rival = player.rivals?.[index];
+    if (!rival) return;
+
+    const rivals = [...player.rivals];
+    const success = rollChance(0.45 + player.social * 0.004);
+    rivals[index] = {
+      ...rival,
+      hostility: Math.max(0, rival.hostility + (success ? -18 : 10)),
+      history: [
+        ...(rival.history || []),
+        success ? 'You defused some of the tension.' : 'The confrontation made things worse.',
+      ],
+    };
+
+    applyAction(
+      { rivals, social: player.social + (success ? 3 : -3), happiness: player.happiness + (success ? 5 : -6) },
+      success
+        ? `You talked ${rival.name} down. The rivalry cooled.`
+        : `${rival.name} turned the confrontation against you.`,
+      'Rival'
+    );
+  };
+
+  const investigateRival = (index) => {
+    const rival = player.rivals?.[index];
+    if (!rival) return;
+
+    const rivals = [...player.rivals];
+    const success = rollChance(0.35 + player.smarts * 0.005);
+    rivals[index] = {
+      ...rival,
+      hostility: Math.max(0, rival.hostility + (success ? -8 : 8)),
+      history: [
+        ...(rival.history || []),
+        success ? 'You learned useful leverage.' : 'They noticed you digging.',
+      ],
+    };
+
+    applyAction(
+      { rivals, smarts: player.smarts + (success ? 4 : 0), happiness: player.happiness + (success ? 4 : -5) },
+      success
+        ? `You found leverage on ${rival.name}.`
+        : `${rival.name} caught you investigating them.`,
+      'Rival'
+    );
+  };
+
   return (
     <div className={styles.panel}>
       <div className={styles.sectionHeader}>
@@ -192,6 +240,43 @@ export default function RelationsPanel() {
               </div>
             );
           })}
+        </>
+      )}
+
+      {player.rivals?.length > 0 && (
+        <>
+          <h3 className={styles.sectionTitle} style={{ marginTop: '20px' }}>Rivals</h3>
+          {player.rivals.map((rival, index) => (
+            <div key={rival.id || index} className={styles.listRow}>
+              <div className={styles.listInfo}>
+                <strong>{rival.name}</strong>
+                <small>
+                  {rival.type} â€¢ Hostility: {rival.hostility}%
+                  {rival.history?.length > 0 && ` â€¢ ${rival.history[rival.history.length - 1]}`}
+                </small>
+              </div>
+              <div className={styles.actions}>
+                <Button size="small" onClick={() => confrontRival(index)}>Confront</Button>
+                <Button size="small" onClick={() => investigateRival(index)}>Investigate</Button>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {player.secrets?.length > 0 && (
+        <>
+          <h3 className={styles.sectionTitle} style={{ marginTop: '20px' }}>Secrets</h3>
+          {player.secrets.map(secret => (
+            <div key={secret.id} className={styles.listRow}>
+              <div className={styles.listInfo}>
+                <strong>{secret.title}</strong>
+                <small>
+                  {secret.exposed ? 'Exposed' : 'Hidden'} â€¢ Heat: {secret.heat}% â€¢ {secret.description}
+                </small>
+              </div>
+            </div>
+          ))}
         </>
       )}
     </div>
