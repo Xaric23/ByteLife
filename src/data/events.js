@@ -891,9 +891,126 @@ export const supernaturalEncounters = [
   },
 ];
 
+export const scpContainmentEvents = [
+  {
+    id: "scp_experiment",
+    title: "Containment Experiment",
+    description: "Foundation researchers want to run tests on your anomalous properties.",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Cooperate", effects: {}, outcomes: [
+        { weight: 0.4, message: "The tests were uncomfortable but quick.", effects: { health: -5, happiness: -10 } },
+        { weight: 0.3, message: "They learned something new. Your privileges increased.", effects: { health: -10, happiness: 5 } },
+        { weight: 0.2, message: "Painful procedures. You feel weaker.", effects: { health: -20, happiness: -15 } },
+        { weight: 0.1, message: "The experiment went wrong. Critical condition.", effects: { health: -40, happiness: -25 } },
+      ]},
+      { text: "Resist", effects: {}, outcomes: [
+        { weight: 0.3, message: "They sedated you and did it anyway.", effects: { health: -15, happiness: -20 } },
+        { weight: 0.4, message: "Security was called. Solitary confinement.", effects: { happiness: -30 } },
+        { weight: 0.2, message: "Your resistance was noted. Harsher containment procedures.", effects: { happiness: -25, health: -10 } },
+        { weight: 0.1, message: "You injured a researcher. Keter reclassification pending.", effects: { happiness: -20 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_interview",
+    title: "Foundation Interview",
+    description: "A researcher wants to document your history and abilities.",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Tell the truth", effects: {}, outcomes: [
+        { weight: 0.5, message: "Your cooperation is appreciated. Small comfort improvements.", effects: { happiness: 10 } },
+        { weight: 0.3, message: "They found your story fascinating. Better treatment.", effects: { happiness: 15, health: 5 } },
+        { weight: 0.2, message: "Your information led to the capture of others like you.", effects: { happiness: -10 } },
+      ]},
+      { text: "Lie", effects: {}, outcomes: [
+        { weight: 0.4, message: "They believed you. For now.", effects: { happiness: 5 } },
+        { weight: 0.3, message: "They detected inconsistencies. Trust decreased.", effects: { happiness: -15 } },
+        { weight: 0.3, message: "Caught in the lie. Interrogation protocols activated.", effects: { happiness: -25, health: -10 } },
+      ]},
+      { text: "Stay silent", effects: {}, outcomes: [
+        { weight: 0.6, message: "Interview terminated. No change in status.", effects: {} },
+        { weight: 0.4, message: "Your silence is noted as non-compliance.", effects: { happiness: -10 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_breach",
+    title: "Containment Breach",
+    description: "Alarms blare. Another anomaly has escaped. In the chaos, your cell door malfunctions...",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Attempt escape", effects: {}, outcomes: [
+        { weight: 0.15, message: "You made it out! Freedom at last!", effects: { happiness: 50 }, escape: true },
+        { weight: 0.35, message: "Almost made it. Recaptured at the perimeter.", effects: { health: -20, happiness: -15 } },
+        { weight: 0.3, message: "MTF units intercepted you. Back to containment.", effects: { health: -15, happiness: -20 } },
+        { weight: 0.2, message: "You encountered another escaped anomaly. It didn't go well.", effects: { health: -35, happiness: -20 } },
+      ]},
+      { text: "Stay in cell", effects: {}, outcomes: [
+        { weight: 0.7, message: "The breach was contained. Your compliance is noted.", effects: { happiness: 10 } },
+        { weight: 0.2, message: "The escaping anomaly passed by your cell. Terrifying.", effects: { happiness: -15 } },
+        { weight: 0.1, message: "Collateral damage from the breach. Your cell was damaged.", effects: { health: -15 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_cell_life",
+    title: "Cell Routine",
+    description: "Another day in containment. The fluorescent lights never turn off.",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Exercise", effects: {}, outcomes: [
+        { weight: 0.7, message: "Staying fit helps maintain your sanity.", effects: { health: 5, happiness: 5 } },
+        { weight: 0.3, message: "Exhausted yourself. At least you'll sleep tonight.", effects: { health: -5, happiness: 10 } },
+      ]},
+      { text: "Meditate", effects: {}, outcomes: [
+        { weight: 0.6, message: "Found some inner peace despite the circumstances.", effects: { happiness: 10 } },
+        { weight: 0.3, message: "Your powers stirred. The Foundation noticed.", effects: { happiness: -5 } },
+        { weight: 0.1, message: "Deep meditation. You feel more in control of your abilities.", effects: { happiness: 15, smarts: 3 } },
+      ]},
+      { text: "Pace anxiously", effects: {}, outcomes: [
+        { weight: 0.5, message: "The walls feel closer every day.", effects: { happiness: -10 } },
+        { weight: 0.5, message: "A guard took pity and gave you a book.", effects: { happiness: 5, smarts: 2 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_visitor",
+    title: "Unexpected Visitor",
+    description: "Someone has requested to see you. This is highly irregular.",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Accept the visit", effects: {}, outcomes: [
+        { weight: 0.3, message: "A family member! They've been searching for you.", effects: { happiness: 30, social: 10 } },
+        { weight: 0.25, message: "A lawyer from a mysterious organization. They're working on your case.", effects: { happiness: 20 } },
+        { weight: 0.25, message: "It was a Foundation psychologist. Standard evaluation.", effects: { happiness: -5 } },
+        { weight: 0.2, message: "A member of the Serpent's Hand. They slipped you information.", effects: { happiness: 15 }, factions: { serpentHand: 15 } },
+      ]},
+      { text: "Refuse", effects: {}, outcomes: [
+        { weight: 1.0, message: "The visitor left. You'll never know who it was.", effects: { happiness: -5 } },
+      ]},
+    ]
+  },
+];
+
 export const getEligibleEvents = (player) => {
   const eligible = [];
   const age = player.age;
+  
+  // If SCP contained, only return containment events
+  if (player.scpContained) {
+    for (const event of scpContainmentEvents) {
+      if (age >= event.minAge && age <= event.maxAge) {
+        eligible.push({ ...event, category: 'scp' });
+      }
+    }
+    return eligible;
+  }
+  
+  // If in prison, limit to prison-compatible events (for now, reduce event pool)
+  if (player.inPrison) {
+    return []; // Could add prison events later
+  }
   
   const categories = ['childhood', 'teen', 'adult', 'senior', 'random'];
   if (player.occult === "Human") categories.push('occult_human');

@@ -54,5 +54,9 @@ export function applyOutcomeToPlayer(player, outcome) {
     updates.occultMeter = 70;
   }
 
+  if (outcome.escape) {
+    updates.scpContained = false;
+  }
+
   return clampPlayerStats({ ...player, ...updates });
 }
