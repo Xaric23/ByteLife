@@ -722,15 +722,15 @@ export const lifeEvents = {
       minAge: 16, maxAge: 90,
       options: [
         { text: "Investigate", effects: {}, outcomes: [
-          { weight: 0.3, message: "Just a helicopter with a searchlight. Weird time for it though.", effects: { happiness: -5 } },
-          { weight: 0.25, message: "The lights vanished before you got outside.", effects: { happiness: -10 } },
+          { weight: 0.45, message: "Just a helicopter with a searchlight. Weird time for it though.", effects: { happiness: -5 } },
+          { weight: 0.3, message: "The lights vanished before you got outside.", effects: { happiness: -10 } },
           { weight: 0.15, message: "You have no memory of the next few hours...", effects: { happiness: -20 }, supernatural: true },
-          { weight: 0.3, message: "A beam of light engulfed you. You woke up... changed.", effects: {}, transform: "Alien" },
+          { weight: 0.1, message: "A beam of light engulfed you. You woke up... changed.", effects: {}, transform: "Alien" },
         ]},
         { text: "Go back to sleep", effects: {}, outcomes: [
-          { weight: 0.6, message: "Strange dreams, but morning came normally.", effects: {} },
+          { weight: 0.7, message: "Strange dreams, but morning came normally.", effects: {} },
           { weight: 0.25, message: "You woke up in a field miles from home. No memory of how.", effects: { happiness: -25 }, supernatural: true },
-          { weight: 0.15, message: "You woke up with a strange implant scar. Something happened.", effects: { health: -5 }, transform: "Alien" },
+          { weight: 0.05, message: "You woke up with a strange implant scar. Something happened.", effects: { health: -5 }, transform: "Alien" },
         ]},
       ]
     },
@@ -741,14 +741,14 @@ export const lifeEvents = {
       minAge: 16, maxAge: 70,
       options: [
         { text: "Walk into the center", effects: {}, outcomes: [
-          { weight: 0.35, message: "Just flattened wheat. Probably a prank.", effects: { smarts: 2 } },
-          { weight: 0.25, message: "You felt dizzy and disoriented in the center.", effects: { happiness: -10, health: -5 } },
+          { weight: 0.45, message: "Just flattened wheat. Probably a prank.", effects: { smarts: 2 } },
+          { weight: 0.3, message: "You felt dizzy and disoriented in the center.", effects: { happiness: -10, health: -5 } },
           { weight: 0.15, message: "Your electronics all stopped working. Creepy.", effects: { money: -500 } },
-          { weight: 0.25, message: "Time seemed to stop. When you 'woke up', you were different.", effects: {}, transform: "Alien" },
+          { weight: 0.1, message: "Time seemed to stop. When you 'woke up', you were different.", effects: {}, transform: "Alien" },
         ]},
         { text: "Stay at the edge", effects: {}, outcomes: [
-          { weight: 0.7, message: "Took some photos. Cool story at least.", effects: { social: 5 } },
-          { weight: 0.3, message: "Something pulled you into the center anyway...", effects: { happiness: -15 }, transform: "Alien" },
+          { weight: 0.9, message: "Took some photos. Cool story at least.", effects: { social: 5 } },
+          { weight: 0.1, message: "Something pulled you into the center anyway...", effects: { happiness: -15 }, transform: "Alien" },
         ]},
       ]
     },
@@ -759,10 +759,10 @@ export const lifeEvents = {
       minAge: 18, maxAge: 80,
       options: [
         { text: "Try to remember", effects: {}, outcomes: [
-          { weight: 0.3, message: "Flashes of bright lights, metal surfaces... probably just a dream.", effects: { happiness: -10 } },
-          { weight: 0.25, message: "You remember beings with large eyes. Impossible.", effects: { happiness: -20 }, supernatural: true },
-          { weight: 0.2, message: "Memory suppression failed. They changed you.", effects: {}, transform: "Alien" },
-          { weight: 0.25, message: "The memories are blocked. Probably for the best.", effects: { happiness: -5 } },
+          { weight: 0.4, message: "Flashes of bright lights, metal surfaces... probably just a dream.", effects: { happiness: -10 } },
+          { weight: 0.3, message: "You remember beings with large eyes. Impossible.", effects: { happiness: -20 }, supernatural: true },
+          { weight: 0.1, message: "Memory suppression failed. They changed you.", effects: {}, transform: "Alien" },
+          { weight: 0.2, message: "The memories are blocked. Probably for the best.", effects: { happiness: -5 } },
         ]},
         { text: "Forget about it", effects: {}, outcomes: [
           { weight: 0.6, message: "Life continues. Some things are better unknown.", effects: {} },
@@ -777,14 +777,14 @@ export const lifeEvents = {
       minAge: 18, maxAge: 60,
       options: [
         { text: "Run", effects: {}, outcomes: [
-          { weight: 0.5, message: "You escaped without incident. Close call.", effects: { happiness: -5 } },
+          { weight: 0.6, message: "You escaped without incident. Close call.", effects: { happiness: -5 } },
           { weight: 0.3, message: "They detained you briefly. Very intimidating questions.", effects: { happiness: -20, social: -5 } },
-          { weight: 0.2, message: "They caught you and used you for an 'experiment'...", effects: { health: -10 }, transform: "Alien" },
+          { weight: 0.1, message: "They caught you and used you for an 'experiment'...", effects: { health: -10 }, transform: "Alien" },
         ]},
         { text: "Surrender", effects: {}, outcomes: [
-          { weight: 0.4, message: "Released after questioning. They erased your memory... mostly.", effects: { happiness: -10 } },
-          { weight: 0.3, message: "Detained for 'debriefing'. Something was done to you.", effects: { happiness: -25 }, supernatural: true },
-          { weight: 0.3, message: "You saw things inside that facility. They made sure you'd never tell.", effects: {}, transform: "Alien" },
+          { weight: 0.5, message: "Released after questioning. They erased your memory... mostly.", effects: { happiness: -10 } },
+          { weight: 0.4, message: "Detained for 'debriefing'. Something was done to you.", effects: { happiness: -25 }, supernatural: true },
+          { weight: 0.1, message: "You saw things inside that facility. They made sure you'd never tell.", effects: {}, transform: "Alien" },
         ]},
       ]
     },

@@ -391,7 +391,7 @@ export const supernaturalEvents = [
     description: "A blinding light descends from the sky. You wake up... different.",
     resultOccult: "Alien",
     minAge: 16,
-    weight: 0.8,
+    weight: 0.4,
   },
   {
     id: "witch_awakening",
