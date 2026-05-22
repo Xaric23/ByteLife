@@ -1,5 +1,10 @@
 import { artifactTemplates, secretTemplates, createInitialFactions } from '../data/storySystems';
-import { clampPlayerStats } from '../utils/helpers';
+import { clampPlayerStats, randomItem } from '../utils/helpers';
+
+const TRANSFORMABLE_OCCULTS = [
+  'Vampire', 'Werewolf', 'Zombie', 'Ghoul', 'Demon', 'Fae', 
+  'Revenant', 'Wendigo', 'Alien', 'Witch', 'Psychic', 'Ghost'
+];
 
 export function applyOutcomeToPlayer(player, outcome) {
   if (!player || !outcome) return player;
@@ -52,6 +57,15 @@ export function applyOutcomeToPlayer(player, outcome) {
   if (outcome.transform) {
     updates.occult = outcome.transform;
     updates.occultMeter = 70;
+  }
+
+  if (outcome.transformRandom) {
+    const eligibleOccults = TRANSFORMABLE_OCCULTS.filter(o => o !== player.occult);
+    const newOccult = randomItem(eligibleOccults);
+    if (newOccult) {
+      updates.occult = newOccult;
+      updates.occultMeter = 70;
+    }
   }
 
   if (outcome.escape) {

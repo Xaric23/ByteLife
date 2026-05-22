@@ -991,6 +991,161 @@ export const scpContainmentEvents = [
       ]},
     ]
   },
+  {
+    id: "scp_chemical_trial",
+    title: "Experimental Compound",
+    description: "Dr. ████ approaches with a syringe filled with an iridescent liquid. 'We believe this may... normalize your condition.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Accept the injection", effects: {}, outcomes: [
+        { weight: 0.25, message: "The compound burned through your veins. You feel... human again.", effects: { health: -15, happiness: 30 }, transform: "Human", escape: true },
+        { weight: 0.20, message: "Your body rejected the compound violently. No change, but weaker.", effects: { health: -25, happiness: -15 } },
+        { weight: 0.15, message: "Something went wrong. Your condition has... mutated.", effects: { health: -20 }, transformRandom: true },
+        { weight: 0.15, message: "The compound stabilized your abilities. You feel stronger.", effects: { health: 10, happiness: 10 } },
+        { weight: 0.10, message: "Catastrophic reaction! Multiple anomalous signatures detected.", effects: { health: -35 }, transform: "Abomination" },
+        { weight: 0.15, message: "No effect. Back to your cell.", effects: { happiness: -10 } },
+      ]},
+      { text: "Refuse", effects: {}, outcomes: [
+        { weight: 0.6, message: "Your non-compliance is noted. No privileges this month.", effects: { happiness: -15 } },
+        { weight: 0.4, message: "They administered it anyway while you were sedated.", effects: { health: -20, happiness: -25 }, transformRandom: true },
+      ]},
+    ]
+  },
+  {
+    id: "scp_radiation_exposure",
+    title: "Radiation Chamber",
+    description: "You're moved to a lead-lined chamber. 'We need to observe how your anomaly responds to various radiation frequencies.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Endure the procedure", effects: {}, outcomes: [
+        { weight: 0.3, message: "Low-level exposure. Uncomfortable but survivable.", effects: { health: -10 } },
+        { weight: 0.25, message: "Your abilities fluctuated wildly. They collected valuable data.", effects: { health: -15, happiness: -10 } },
+        { weight: 0.15, message: "The radiation triggered a transformation!", effects: { health: -20 }, transformRandom: true },
+        { weight: 0.15, message: "You absorbed the radiation. You feel... energized.", effects: { health: 5, happiness: 5 } },
+        { weight: 0.10, message: "Severe radiation burns. Emergency medical treatment required.", effects: { health: -40, happiness: -25 } },
+        { weight: 0.05, message: "Your body metabolized the radiation completely. They're very interested now.", effects: { smarts: 5 } },
+      ]},
+      { text: "Try to break the equipment", effects: {}, outcomes: [
+        { weight: 0.3, message: "You damaged the controls! Procedure aborted.", effects: { happiness: 10 } },
+        { weight: 0.4, message: "Security subdued you. Procedure continued anyway.", effects: { health: -20, happiness: -20 } },
+        { weight: 0.3, message: "You broke free momentarily but were recaptured.", effects: { health: -15, happiness: -10 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_blood_transfusion",
+    title: "Anomalous Blood Transfusion",
+    description: "They want to introduce blood from another contained anomaly into your system. 'For research purposes.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Allow the transfusion", effects: {}, outcomes: [
+        { weight: 0.20, message: "The foreign blood was rejected. Painful but no lasting effects.", effects: { health: -15, happiness: -10 } },
+        { weight: 0.20, message: "You feel something new awakening inside you...", effects: { health: -10 }, transformRandom: true },
+        { weight: 0.15, message: "The blood merged with yours. You've become something... hybrid.", effects: { health: -20 }, transform: "Abomination" },
+        { weight: 0.15, message: "Surprisingly, you feel better. The blood was compatible.", effects: { health: 15, happiness: 5 } },
+        { weight: 0.15, message: "Violent reaction! Emergency intervention required.", effects: { health: -35, happiness: -20 } },
+        { weight: 0.15, message: "No observable changes. They seem disappointed.", effects: { happiness: -5 } },
+      ]},
+      { text: "Fight the procedure", effects: {}, outcomes: [
+        { weight: 0.4, message: "You bit a researcher. Worth it.", effects: { happiness: 5, health: -5 } },
+        { weight: 0.3, message: "Restrained and sedated. Procedure completed.", effects: { health: -15, happiness: -20 }, transformRandom: true },
+        { weight: 0.3, message: "Your resistance caused a containment alert. Procedure postponed.", effects: { happiness: 10 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_cognitohazard",
+    title: "Cognitohazard Exposure",
+    description: "They want to show you images from Document [REDACTED]. 'We need to understand if your anomaly provides any resistance.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Look at the images", effects: {}, outcomes: [
+        { weight: 0.3, message: "The images meant nothing to you. Apparently that's significant.", effects: { smarts: 5 } },
+        { weight: 0.25, message: "Headaches for days. But you remember nothing.", effects: { health: -10, happiness: -15 } },
+        { weight: 0.15, message: "You understood something you shouldn't. Knowledge you can't unlearn.", effects: { smarts: 10, happiness: -20 } },
+        { weight: 0.15, message: "The images triggered a psychic awakening.", effects: { health: -15 }, transform: "Psychic" },
+        { weight: 0.10, message: "You saw... home. Wherever that is now.", effects: { happiness: 20 } },
+        { weight: 0.05, message: "The cognitohazard backfired. You can now see things others can't.", effects: { smarts: 15, happiness: -10 } },
+      ]},
+      { text: "Close your eyes", effects: {}, outcomes: [
+        { weight: 0.5, message: "They forced your eyes open. You saw anyway.", effects: { happiness: -20, health: -5 }, },
+        { weight: 0.3, message: "They accepted your refusal. Surprisingly.", effects: {} },
+        { weight: 0.2, message: "You kept them closed the whole time. Small victory.", effects: { happiness: 10 } },
+      ]},
+    ]
+  },
+  {
+    id: "scp_artifact_interaction",
+    title: "Artifact Interaction Test",
+    description: "They've brought in SCP-████, a small obsidian cube. 'Touch it. We need to see what happens.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Touch the artifact", effects: {}, outcomes: [
+        { weight: 0.25, message: "Nothing happened. They seem relieved.", effects: {} },
+        { weight: 0.20, message: "The cube hummed and grew warm. You felt a connection.", effects: { happiness: 10, smarts: 5 } },
+        { weight: 0.15, message: "Pain shot through your arm. The cube rejected you.", effects: { health: -20, happiness: -15 } },
+        { weight: 0.15, message: "Visions of another world flooded your mind.", effects: { smarts: 10, happiness: -10 } },
+        { weight: 0.10, message: "The artifact activated! Your nature has shifted.", effects: { health: -15 }, transformRandom: true },
+        { weight: 0.10, message: "The cube crumbled to dust in your hands. They're furious.", effects: { happiness: -25 } },
+        { weight: 0.05, message: "You absorbed the artifact somehow. New abilities manifest.", effects: { health: 10, smarts: 10 } },
+      ]},
+      { text: "Refuse", effects: {}, outcomes: [
+        { weight: 0.5, message: "They placed it in your cell anyway. You avoided touching it... for now.", effects: { happiness: -5 } },
+        { weight: 0.3, message: "Cooperation privileges revoked.", effects: { happiness: -15 } },
+        { weight: 0.2, message: "A researcher 'accidentally' pushed you into it.", effects: { health: -10 }, transformRandom: true },
+      ]},
+    ]
+  },
+  {
+    id: "scp_termination_attempt",
+    title: "Termination Order",
+    description: "Guards enter your cell heavily armed. 'O5 Command has authorized permanent neutralization of your anomaly.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Accept your fate", effects: {}, outcomes: [
+        { weight: 0.3, message: "The bullets passed through you. You're more than they realized.", effects: { happiness: -20 }, },
+        { weight: 0.25, message: "Last-second reprieve! A researcher needs you for a new project.", effects: { happiness: 10 } },
+        { weight: 0.2, message: "You died. But death doesn't stick for your kind.", effects: { health: -30 }, transform: "Revenant" },
+        { weight: 0.15, message: "The execution failed spectacularly. They're terrified of you now.", effects: { happiness: 5 } },
+        { weight: 0.1, message: "Critical injuries but you survived. Termination order rescinded.", effects: { health: -50, happiness: -30 } },
+      ]},
+      { text: "Fight for survival", effects: {}, outcomes: [
+        { weight: 0.2, message: "You killed them all. Now you REALLY need to escape.", effects: { health: -20, happiness: -10 } },
+        { weight: 0.3, message: "Wounded several guards before being subdued. Order postponed.", effects: { health: -25, happiness: 5 } },
+        { weight: 0.2, message: "In the chaos, something inside you awakened.", effects: { health: -15 }, transformRandom: true },
+        { weight: 0.15, message: "A containment breach elsewhere saved you. Guards redeployed.", effects: { happiness: 15 } },
+        { weight: 0.15, message: "You escaped your cell! Freedom is close!", effects: { health: -10, happiness: 30 }, escape: true },
+      ]},
+    ]
+  },
+  {
+    id: "scp_other_anomaly",
+    title: "Cross-Testing",
+    description: "Another contained entity is brought to your cell. 'We're curious what happens when two anomalies interact.'",
+    minAge: 0, maxAge: 200,
+    options: [
+      { text: "Approach carefully", effects: {}, outcomes: [
+        { weight: 0.25, message: "The other anomaly was hostile! You fought it off.", effects: { health: -20, happiness: -10 } },
+        { weight: 0.20, message: "You felt a kinship. A moment of connection in this prison.", effects: { happiness: 20, social: 10 } },
+        { weight: 0.15, message: "Your anomalies reacted violently. Both of you transformed.", effects: { health: -25 }, transformRandom: true },
+        { weight: 0.15, message: "It tried to merge with you. Partially successful.", effects: { health: -15 }, transform: "Abomination" },
+        { weight: 0.15, message: "Information exchange. It knows a way out.", effects: { smarts: 10, happiness: 15 } },
+        { weight: 0.10, message: "The interaction neutralized both your anomalies temporarily.", effects: { happiness: -15 } },
+      ]},
+      { text: "Attack immediately", effects: {}, outcomes: [
+        { weight: 0.4, message: "You dominated the encounter. The Foundation is impressed... and concerned.", effects: { health: -10 } },
+        { weight: 0.3, message: "It was stronger. You barely survived.", effects: { health: -35, happiness: -20 } },
+        { weight: 0.2, message: "Mutual destruction. You both need to regenerate.", effects: { health: -30 } },
+        { weight: 0.1, message: "You consumed its essence. Power floods through you.", effects: { health: 10 }, transformRandom: true },
+      ]},
+      { text: "Try to communicate", effects: {}, outcomes: [
+        { weight: 0.4, message: "It doesn't speak. But it understood.", effects: { social: 5, happiness: 10 } },
+        { weight: 0.3, message: "It revealed Foundation secrets telepathically.", effects: { smarts: 15 } },
+        { weight: 0.2, message: "Communication attempt triggered a psychic link. You're different now.", effects: { happiness: -10 }, transform: "Psychic" },
+        { weight: 0.1, message: "It was a trap. The 'anomaly' was a D-Class in disguise.", effects: { happiness: -15 } },
+      ]},
+    ]
+  },
 ];
 
 export const getEligibleEvents = (player) => {
